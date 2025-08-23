@@ -1,0 +1,38 @@
+service: aws-crud-api
+frameworkVersion: "3"
+
+useDotenv: true
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: ${opt:region, 'us-east-1'}
+  stage: ${opt:stage, 'dev'}
+  environment:
+    STAGE: ${sls:stage}
+    TABLE_NAME: ${param:tableName}
+    LOG_LEVEL: ${param:logLevel}
+
+params:
+  dev:
+    tableName: ${self:service}-dev-items
+    logLevel: DEBUG
+  prod:
+    tableName: ${self:service}-prod-items
+    logLevel: INFO
+
+plugins:
+  - serverless-offline
+  - serverless-esbuild
+
+custom:
+  esbuild:
+    bundle: true
+    minify: true
+    sourcemap: true
+    target: node18
+    platform: node
+    concurrency: 10
+
+# functions: (se agregarán luego)
+# resources: (DynamoDB/IAM luego)

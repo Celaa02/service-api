@@ -1,0 +1,9 @@
+node_modules
+.esbuild
+.build
+coverage
+.env
+.env.*
+*.log
+.DS_Store
+
