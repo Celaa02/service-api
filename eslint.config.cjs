@@ -1,20 +1,13 @@
-// eslint.config.js (flat config para ESLint v9)
-import js from "@eslint/js";
-import tseslint from "typescript-eslint";
-import importPlugin from "eslint-plugin-import";
-import prettier from "eslint-config-prettier";
+// eslint.config.cjs (ESLint v9 - flat config en CommonJS)
+const js = require("@eslint/js");
+const tseslint = require("typescript-eslint");
+const importPlugin = require("eslint-plugin-import");
+const prettier = require("eslint-config-prettier");
 
-export default [
+module.exports = [
   // Ignorados (reemplaza .eslintignore)
   {
-    ignores: [
-      "node_modules",
-      ".esbuild",
-      ".build",
-      "coverage",
-      "dist",
-      "**/*.js", // si tu código fuente es solo TS
-    ],
+    ignores: ["node_modules", ".esbuild", ".build", "coverage", "dist"],
   },
 
   // Reglas base JS
@@ -26,14 +19,10 @@ export default [
   // Reglas del proyecto
   {
     files: ["**/*.ts"],
-    plugins: {
-      import: importPlugin,
-    },
+    plugins: { import: importPlugin },
     languageOptions: {
       ecmaVersion: 2022,
       sourceType: "module",
-      // Si NO necesitas reglas type-aware, déjalo sin "project"
-      // parserOptions: { project: "./tsconfig.json", tsconfigRootDir: import.meta.dirname },
     },
     rules: {
       "no-console": ["warn", { allow: ["warn", "error"] }],
@@ -60,7 +49,6 @@ export default [
     files: ["tests/**/*.ts", "**/*.test.ts", "**/*.spec.ts"],
     languageOptions: {
       globals: {
-        // mínimos para Jest
         describe: "readonly",
         it: "readonly",
         test: "readonly",
@@ -74,3 +62,4 @@ export default [
     },
   },
 ];
+
