@@ -34,5 +34,7 @@ custom:
     platform: node
     concurrency: 10
 
-# functions: (se agregarán luego)
+functions:
+  ping:
+    handler: src/handlers/createItem.handler
 # resources: (DynamoDB/IAM luego)
