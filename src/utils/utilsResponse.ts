@@ -7,5 +7,6 @@ export interface ApiGatewayEvent {
 export interface ApiGatewayResponse {
   statusCode: number;
   headers?: Record<string, string>;
+  message?: string;
   body: string;
 }
