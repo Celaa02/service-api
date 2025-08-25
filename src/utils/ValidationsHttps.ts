@@ -1,13 +1,36 @@
-import { ApiGatewayEvent } from "./utilsResponse";
+import { APIGatewayProxyEvent } from 'aws-lambda';
+import Joi from 'joi';
 
-export const validationHttps = async (event: ApiGatewayEvent) => {
-  if (event.body != null && event.body !== "") {
-    return JSON.parse(event.body);
-  } else if (event.pathParameters && Object.keys(event.pathParameters).length) {
-    return event.pathParameters;
-  } else if (event.queryStringParameters && Object.keys(event.queryStringParameters).length) {
-    return event.queryStringParameters;
+import { AppError } from './HttpResponseErrors';
+
+export const validationHttps = async (event: APIGatewayProxyEvent, schema: Joi.ObjectSchema) => {
+  const { body, pathParameters, queryStringParameters } = event ?? {};
+
+  let data: any;
+
+  if (typeof body === 'string' && body.trim() !== '') {
+    try {
+      data = JSON.parse(body);
+    } catch {
+      throw AppError.badRequest('Invalid JSON body');
+    }
+  } else if (pathParameters && Object.keys(pathParameters).length > 0) {
+    data = pathParameters;
+  } else if (queryStringParameters && Object.keys(queryStringParameters).length > 0) {
+    data = queryStringParameters;
   } else {
-    return false;
+    throw AppError.invalidInput('Invalid input');
   }
+
+  const { value, error } = schema.validate(data, {
+    abortEarly: false,
+    allowUnknown: false,
+    stripUnknown: true,
+  });
+
+  if (error) {
+    throw AppError.invalidInput('Validation error', error.details);
+  }
+
+  return value;
 };

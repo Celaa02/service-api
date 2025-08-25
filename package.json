@@ -8,6 +8,7 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier . --write",
+    "format:check": "prettier --check .",
     "test": "jest --passWithNoTests",
     "dev": "serverless offline --stage dev",
     "deploy:dev": "serverless deploy --stage dev",
@@ -23,10 +24,13 @@
     "@commitlint/cli": "^19.8.1",
     "@commitlint/config-conventional": "^19.8.1",
     "@eslint/js": "^9.34.0",
+    "@types/aws-lambda": "^8.10.152",
     "@types/jest": "^30.0.0",
+    "@types/joi": "^17.2.2",
     "@types/node": "^24.3.0",
     "@typescript-eslint/eslint-plugin": "^8.40.0",
     "@typescript-eslint/parser": "^8.40.0",
+    "aws-lambda": "^1.0.7",
     "esbuild": "^0.25.9",
     "eslint": "^9.34.0",
     "eslint-config-prettier": "^10.1.8",
@@ -46,7 +50,9 @@
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.873.0",
     "@aws-sdk/lib-dynamodb": "^3.873.0",
-    "uuid": "^11.1.0"
+    "joi": "^17.13.3",
+    "uuid": "^11.1.0",
+    "winston": "^3.17.0"
   },
   "lint-staged": {
     "*.{ts,tsx,js}": [

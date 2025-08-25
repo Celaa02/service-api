@@ -1,58 +1,45 @@
-import { baseHeaders, Messages } from "../constants";
-import { ApiGatewayResponse } from "./utilsResponse";
+import { APIGatewayProxyResult } from 'aws-lambda';
 
-export const _200_OK_ = (
-  body: unknown,
-  statusCode = 200,
-  message?: string
-): ApiGatewayResponse => ({
+import { baseHeaders } from '../constants';
+
+export const _200_OK_ = (data: unknown, statusCode = 200): APIGatewayProxyResult => ({
   statusCode,
   headers: baseHeaders,
-  message: Messages._OPERATION_SUCCESSFULLY_ ?? message,
-  body: JSON.stringify(body),
+  body: JSON.stringify(data),
 });
 
-export const _201_CREATED_ = (body: unknown, message?: string): ApiGatewayResponse => ({
+export const _201_CREATED_ = (data: unknown): APIGatewayProxyResult => ({
   statusCode: 201,
   headers: baseHeaders,
-  message: Messages._CREATED_RESOURCE_ ?? message,
-  body: JSON.stringify(body),
+  body: JSON.stringify(data),
 });
 
-export const _204_NO_CONTENT_ = (): ApiGatewayResponse => ({
+export const _204_NO_CONTENT_ = (): APIGatewayProxyResult => ({
   statusCode: 204,
   headers: baseHeaders,
-  message: Messages._NO_CONTENT_,
-  body: "",
+  body: '',
 });
 
-export const _400_BAD_REQUEST_ = (body: unknown, message?: string): ApiGatewayResponse => ({
+export const _400_BAD_REQUEST_ = (data: unknown): APIGatewayProxyResult => ({
   statusCode: 400,
   headers: baseHeaders,
-  message: Messages._BAD_REQUEST_ ?? message,
-  body: JSON.stringify(body),
+  body: JSON.stringify(data),
 });
 
-export const _402_INPUT_INVALIT_ = (body: unknown, message?: string): ApiGatewayResponse => ({
+export const _402_INPUT_INVALIT_ = (data: unknown): APIGatewayProxyResult => ({
   statusCode: 402,
   headers: baseHeaders,
-  message: Messages._INPUT_INVALIT_ ?? message,
-  body: JSON.stringify(body),
+  body: JSON.stringify(data),
 });
 
-export const _404_NOT_FOUND_ = (body: unknown, message?: string): ApiGatewayResponse => ({
+export const _404_NOT_FOUND_ = (data: unknown): APIGatewayProxyResult => ({
   statusCode: 404,
   headers: baseHeaders,
-  message: Messages._NOT_FOUND_ ?? message,
-  body: JSON.stringify(body),
+  body: JSON.stringify(data),
 });
 
-export const _500_INTERNAL_SERVER_ERROR_ = (
-  body: unknown,
-  message?: string
-): ApiGatewayResponse => ({
+export const _500_INTERNAL_SERVER_ERROR_ = (data: unknown): APIGatewayProxyResult => ({
   statusCode: 500,
   headers: baseHeaders,
-  message: Messages._INTERNAL_SERVER_ERROR ?? message,
-  body: JSON.stringify(body),
+  body: JSON.stringify(data),
 });

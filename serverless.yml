@@ -1,17 +1,17 @@
 service: aws-crud-api
-frameworkVersion: "3"
+frameworkVersion: '3'
 
 useDotenv: true
 
 provider:
   name: aws
   runtime: nodejs18.x
-  region: ${opt:region, 'us-east-1'}
   stage: ${opt:stage, 'dev'}
   environment:
     STAGE: ${sls:stage}
     TABLE_NAME: ${param:tableName}
     LOG_LEVEL: ${param:logLevel}
+    IS_OFFLINE: ${env:IS_OFFLINE, 'false'}
 
 params:
   dev:
@@ -35,6 +35,9 @@ custom:
     concurrency: 10
 
 functions:
-  ping:
-    handler: src/handlers/createItem.handler
-# resources: (DynamoDB/IAM luego)
+  createOrder:
+    handler: src/handlers/createOrders.handler
+    events:
+      - httpApi:
+          method: POST
+          path: /orders

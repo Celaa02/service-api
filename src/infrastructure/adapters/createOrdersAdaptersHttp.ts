@@ -1,0 +1,26 @@
+import { APIGatewayProxyEvent } from 'aws-lambda';
+
+import { createOrdersDependencies } from '../../domain/case/dependencies/CreateOrdersDepencies';
+import { createOrderType } from '../../domain/case/dependencies/createOrdersType';
+import { createOrders } from '../../domain/models/OrdersModelsHttp';
+import { parseBody } from '../../utils/utilsResponse';
+
+export const createOrdersHttpAdapter =
+  (doCase: createOrderType) =>
+  async (event: APIGatewayProxyEvent, dependencies: createOrdersDependencies) => {
+    dependencies.logger.info(event);
+
+    if (!event.body) {
+      throw new Error('Request body is required');
+    }
+
+    const body = parseBody<createOrders>(event);
+    const input: createOrders = {
+      userId: body.userId,
+      items: body.items,
+    };
+
+    const customerClientQueryFound = await doCase(dependencies, input);
+
+    return customerClientQueryFound;
+  };

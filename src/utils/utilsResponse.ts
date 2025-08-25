@@ -1,12 +1,16 @@
-export interface ApiGatewayEvent {
-  body?: string | null;
-  pathParameters?: Record<string, string> | null;
-  queryStringParameters?: Record<string, string> | null;
+import { APIGatewayProxyEvent } from 'aws-lambda';
+
+export interface ResponseBody<T = unknown> {
+  code: number;
+  message: string;
+  data: T;
 }
 
-export interface ApiGatewayResponse {
-  statusCode: number;
-  headers?: Record<string, string>;
-  message?: string;
-  body: string;
+export function parseBody<T>(event: APIGatewayProxyEvent): T {
+  if (!event.body) throw new Error('Request body is required');
+  try {
+    return JSON.parse(event.body) as T;
+  } catch {
+    throw new Error('Invalid JSON in request body');
+  }
 }
