@@ -36,11 +36,11 @@ describe('HttpResponse helpers', () => {
   });
 
   it('_204_NO_CONTENT_ should return 204 response with empty body', () => {
-    const result = _204_NO_CONTENT_();
+    const result = _204_NO_CONTENT_(payload);
     expect(result).toEqual({
       statusCode: 204,
       headers: baseHeaders,
-      body: '',
+      body: JSON.stringify(payload),
     });
   });
 

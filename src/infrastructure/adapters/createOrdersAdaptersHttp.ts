@@ -1,7 +1,7 @@
 import { APIGatewayProxyEvent } from 'aws-lambda';
 
-import { createOrdersDependencies } from '../../domain/case/dependencies/CreateOrdersDepencies';
-import { createOrderType } from '../../domain/case/dependencies/createOrdersType';
+import { createOrdersDependencies } from '../../domain/case/dependencies/createOrders/CreateOrdersDepencies';
+import { createOrderType } from '../../domain/case/dependencies/createOrders/createOrdersType';
 import { createOrders } from '../../domain/models/OrdersModelsHttp';
 import { parseBody } from '../../utils/utilsResponse';
 
@@ -19,6 +19,6 @@ export const createOrdersHttpAdapter =
       total: body.total,
       status: body.status,
     };
-    const customerClientQueryFound = await doCase(dependencies, input);
-    return customerClientQueryFound;
+    const response = await doCase(dependencies, input);
+    return response;
   };

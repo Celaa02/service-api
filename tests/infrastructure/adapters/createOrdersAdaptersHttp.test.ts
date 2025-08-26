@@ -1,8 +1,8 @@
 // test/handlers/createOrdersHttpAdapter.test.ts
 import { APIGatewayProxyEvent } from 'aws-lambda';
 
-import { createOrdersDependencies } from '../../../src/domain/case/dependencies/CreateOrdersDepencies';
-import { createOrderType } from '../../../src/domain/case/dependencies/createOrdersType';
+import { createOrdersDependencies } from '../../../src/domain/case/dependencies/createOrders/CreateOrdersDepencies';
+import { createOrderType } from '../../../src/domain/case/dependencies/createOrders/createOrdersType';
 import { createOrders } from '../../../src/domain/models/OrdersModelsHttp';
 import { createOrdersHttpAdapter } from '../../../src/infrastructure/adapters/createOrdersAdaptersHttp';
 import { parseBody } from '../../../src/utils/utilsResponse';

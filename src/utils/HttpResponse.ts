@@ -14,10 +14,10 @@ export const _201_CREATED_ = (data: unknown): APIGatewayProxyResult => ({
   body: JSON.stringify(data),
 });
 
-export const _204_NO_CONTENT_ = (): APIGatewayProxyResult => ({
+export const _204_NO_CONTENT_ = (data: unknown): APIGatewayProxyResult => ({
   statusCode: 204,
   headers: baseHeaders,
-  body: '',
+  body: JSON.stringify(data),
 });
 
 export const _400_BAD_REQUEST_ = (data: unknown): APIGatewayProxyResult => ({

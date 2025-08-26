@@ -18,3 +18,16 @@ export interface itemCreateOrder {
   status: string;
   total: number;
 }
+
+export interface orderByIdResponse {
+  orderId: string;
+  userId: string;
+  items: itemsOrders[];
+  total: number;
+  createdAt: string;
+  status: string;
+}
+
+export interface orderById {
+  orderId: string;
+}

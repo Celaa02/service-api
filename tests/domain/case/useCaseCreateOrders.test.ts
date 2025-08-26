@@ -1,6 +1,6 @@
 import * as crypto from 'crypto';
 
-import { createOrdersDependencies } from '../../../src/domain/case/dependencies/CreateOrdersDepencies';
+import { createOrdersDependencies } from '../../../src/domain/case/dependencies/createOrders/CreateOrdersDepencies';
 import { useCaseCreateOrders } from '../../../src/domain/case/useCaseCreateOrders';
 import { createOrders } from '../../../src/domain/models/OrdersModelsHttp';
 

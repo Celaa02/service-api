@@ -1,8 +1,8 @@
 import { randomUUID } from 'crypto';
 
-import { createOrdersDependencies } from './dependencies/CreateOrdersDepencies';
 import { createOrders } from '../models/OrdersModelsHttp';
-import { createOrderType } from './dependencies/createOrdersType';
+import { createOrdersDependencies } from './dependencies/createOrders/CreateOrdersDepencies';
+import { createOrderType } from './dependencies/createOrders/createOrdersType';
 
 export const useCaseCreateOrders =
   (): createOrderType => async (dependencies: createOrdersDependencies, input: createOrders) => {
