@@ -9,16 +9,19 @@ provider:
   stage: ${opt:stage, 'dev'}
   environment:
     STAGE: ${sls:stage}
-    TABLE_NAME: ${param:tableName}
+    PRODUCTS_TABLE_NAME: ${param:productsTableName}
+    ORDERS_TABLE_NAME: ${param:ordersTableName}
     LOG_LEVEL: ${param:logLevel}
     IS_OFFLINE: ${env:IS_OFFLINE, 'false'}
 
 params:
   dev:
-    tableName: ${self:service}-dev-items
+    productsTableName: ${self:service}-dev-products
+    ordersTableName: ${self:service}-dev-orders
     logLevel: DEBUG
   prod:
-    tableName: ${self:service}-prod-items
+    productsTableName: ${self:service}-prod-products
+    ordersTableName: ${self:service}-prod-orders
     logLevel: INFO
 
 plugins:
@@ -41,3 +44,46 @@ functions:
       - httpApi:
           method: POST
           path: /orders
+
+resources:
+  Resources:
+    ProductsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.PRODUCTS_TABLE_NAME}
+        BillingMode: PAY_PER_REQUEST
+        SSESpecification: { SSEEnabled: true }
+        PointInTimeRecoverySpecification: { PointInTimeRecoveryEnabled: true }
+        AttributeDefinitions:
+          - AttributeName: productId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: productId
+            KeyType: HASH
+
+    OrdersTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.ORDERS_TABLE_NAME}
+        BillingMode: PAY_PER_REQUEST
+        SSESpecification: { SSEEnabled: true }
+        PointInTimeRecoverySpecification: { PointInTimeRecoveryEnabled: true }
+        AttributeDefinitions:
+          - AttributeName: orderId
+            AttributeType: S
+          - AttributeName: userId
+            AttributeType: S
+          - AttributeName: createdAt
+            AttributeType: S
+        KeySchema:
+          - AttributeName: orderId
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: UserOrdersIndex
+            KeySchema:
+              - AttributeName: userId
+                KeyType: HASH
+              - AttributeName: createdAt
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
