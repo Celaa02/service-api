@@ -16,6 +16,8 @@ export const createOrdersHttpAdapter =
     const input: createOrders = {
       userId: body.userId,
       items: body.items,
+      total: body.total,
+      status: body.status,
     };
     const customerClientQueryFound = await doCase(dependencies, input);
     return customerClientQueryFound;

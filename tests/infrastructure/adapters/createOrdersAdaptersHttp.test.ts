@@ -43,7 +43,12 @@ describe('createOrdersHttpAdapter', () => {
   });
 
   it('debe loguear, parsear el body, llamar al caso de uso y devolver su resultado', async () => {
-    const parsed: createOrders = { userId: 'u-1', items: [{ productId: 'A1', qty: 2 }] };
+    const parsed: createOrders = {
+      userId: 'u-1',
+      items: [{ productId: 'A1', qty: 2 }],
+      total: 5,
+      status: 'CREATED',
+    };
     (parseBody as jest.Mock).mockReturnValue(parsed);
 
     const expectedResult = { statusCode: 201, body: JSON.stringify({ ok: true }) };
@@ -59,6 +64,8 @@ describe('createOrdersHttpAdapter', () => {
     expect(doCaseMock as unknown as jest.Mock).toHaveBeenCalledWith(dependencies, {
       userId: 'u-1',
       items: [{ productId: 'A1', qty: 2 }],
+      total: 5,
+      status: 'CREATED',
     });
 
     expect(result).toBe(expectedResult);

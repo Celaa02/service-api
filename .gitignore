@@ -6,4 +6,5 @@ coverage
 .env.*
 *.log
 .DS_Store
-
+.serverless
+.dynamodb
