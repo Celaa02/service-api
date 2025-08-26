@@ -1,6 +1,8 @@
 import { Logger } from 'winston';
 
-export type createOrdersDependencies<T = unknown> = {
-  repository: T;
+import { OrdersRepository } from '../../repository/ordersRepository';
+
+export type createOrdersDependencies = {
+  repository: OrdersRepository;
   logger: Logger;
 };

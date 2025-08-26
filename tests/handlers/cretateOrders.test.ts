@@ -1,14 +1,14 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 
-// eslint-disable-next-line import/order
 import { handler } from '../../src/handlers/createOrders';
-
 import { createOrdersSchema } from '../../src/handlers/schemas/createOrdersSchemaHttp';
+import { createOrdersHttpAdapter } from '../../src/infrastructure/adapters/createOrdersAdaptersHttp';
 import { _201_CREATED_ } from '../../src/utils/HttpResponse';
 import { toHttpResponse } from '../../src/utils/HttpResponseErrors';
 import { logger } from '../../src/utils/Logger';
 import { validationHttps } from '../../src/utils/ValidationsHttps';
 
+// Mocks
 jest.mock('../../src/utils/ValidationsHttps', () => ({
   validationHttps: jest.fn(),
 }));
@@ -27,6 +27,14 @@ jest.mock('../../src/utils/Logger', () => ({
     debug: jest.fn(),
     error: jest.fn(),
   },
+}));
+
+jest.mock('../../src/infrastructure/repository/dynamonDBRepository', () => ({
+  OrderRepositoryDynamoDB: jest.fn().mockImplementation(() => ({})),
+}));
+
+jest.mock('../../src/infrastructure/adapters/createOrdersAdaptersHttp', () => ({
+  createOrdersHttpAdapter: jest.fn(),
 }));
 
 describe('createOrder.handler', () => {
@@ -49,35 +57,48 @@ describe('createOrder.handler', () => {
     jest.clearAllMocks();
   });
 
-  it('should validate input, build 201 response and log success path', async () => {
-    const validated = { orderId: 'abc-123', amount: 50 };
+  it('valida input, ejecuta adapter, retorna 201 y hace logs de éxito', async () => {
+    const validated = { userId: 'u1', items: [{ sku: 'A1', qty: 1 }] };
+    const adapterResponse = { orderId: 'abc-123', userId: 'u1' };
     const successResponse: APIGatewayProxyResult = {
       statusCode: 201,
-      body: JSON.stringify({ ok: true }),
+      body: JSON.stringify(adapterResponse),
       headers: { 'content-type': 'application/json' },
     };
 
     (validationHttps as jest.Mock).mockResolvedValue(validated);
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    (createOrdersHttpAdapter as jest.Mock).mockImplementation((_doCase: any) => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      return jest.fn(async (_event: APIGatewayProxyEvent, _deps: unknown) => {
+        return adapterResponse;
+      });
+    });
+
     (_201_CREATED_ as jest.Mock).mockReturnValue(successResponse);
 
     const res = await handler(baseEvent);
 
     expect(validationHttps).toHaveBeenCalledWith(baseEvent, createOrdersSchema);
-    expect(_201_CREATED_).toHaveBeenCalledWith(validated);
+
+    expect(createOrdersHttpAdapter).toHaveBeenCalledTimes(1);
+    expect(_201_CREATED_).toHaveBeenCalledWith(adapterResponse);
     expect(res).toEqual(successResponse);
 
-    expect(logger.info).toHaveBeenNthCalledWith(1, '📥 Incoming request', { event: baseEvent });
-    expect(logger.debug).toHaveBeenCalledWith('✅ Validation passed', validated);
-    expect(logger.info).toHaveBeenNthCalledWith(2, '✅ sent response', successResponse);
+    expect(logger.info).toHaveBeenCalledWith('📥 Incoming request', { event: baseEvent });
+    expect(logger.debug).toHaveBeenNthCalledWith(1, '✅ Validation passed', validated);
+    expect(logger.debug).toHaveBeenNthCalledWith(2, '✅ Order created ', adapterResponse);
     expect(logger.error).not.toHaveBeenCalled();
     expect(toHttpResponse).not.toHaveBeenCalled();
   });
 
-  it('should map validation error to http error response and log it', async () => {
+  it('mapea errores a http con toHttpResponse y los loguea', async () => {
     const thrown = new Error('validation failed');
     const mapped: APIGatewayProxyResult = {
       statusCode: 400,
       body: JSON.stringify({ message: 'bad request' }),
+      headers: { 'content-type': 'application/json' } as any,
     };
 
     (validationHttps as jest.Mock).mockRejectedValue(thrown);
@@ -86,12 +107,13 @@ describe('createOrder.handler', () => {
     const res = await handler(baseEvent);
 
     expect(validationHttps).toHaveBeenCalledWith(baseEvent, createOrdersSchema);
+    expect(createOrdersHttpAdapter).not.toHaveBeenCalled(); // no se llega al adapter
+    expect(_201_CREATED_).not.toHaveBeenCalled();
     expect(toHttpResponse).toHaveBeenCalledWith(thrown);
     expect(res).toEqual(mapped);
 
     expect(logger.info).toHaveBeenCalledWith('📥 Incoming request', { event: baseEvent });
-    expect(logger.debug).not.toHaveBeenCalled(); // no hay validación exitosa
-    expect(logger.info).not.toHaveBeenCalledWith('✅ sent response', expect.anything());
+    expect(logger.debug).not.toHaveBeenCalled();
     expect(logger.error).toHaveBeenCalledWith('❌ Error in createOrder', { err: thrown });
   });
 });

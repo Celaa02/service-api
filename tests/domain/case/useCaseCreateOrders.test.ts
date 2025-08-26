@@ -1,66 +1,51 @@
-// test/usecases/useCaseCreateOrders.test.ts
 import { createOrdersDependencies } from '../../../src/domain/case/dependencies/CreateOrdersDepencies';
 import { useCaseCreateOrders } from '../../../src/domain/case/useCaseCreateOrders';
 import { createOrders } from '../../../src/domain/models/OrdersModelsHttp';
-import { _201_CREATED_ } from '../../../src/utils/HttpResponse';
-import { AppError } from '../../../src/utils/HttpResponseErrors';
-
-jest.mock('../../../src/utils/HttpResponse', () => ({
-  _201_CREATED_: jest.fn(),
-}));
-
-jest.mock('../../../src/utils/HttpResponseErrors', () => ({
-  AppError: {
-    invalidInput: jest.fn(),
-  },
-}));
 
 describe('useCaseCreateOrders', () => {
-  const dependencies = {} as unknown as createOrdersDependencies;
+  let dependencies: createOrdersDependencies;
   const input: createOrders = {
     orderId: 'abc-123',
-    amount: 99.99,
-    customerId: 'cust-1',
   } as any;
 
   beforeEach(() => {
+    const repository = {
+      createOrders: jest.fn(),
+    };
+    const logger = {
+      info: jest.fn(),
+    };
+
+    dependencies = {
+      repository: repository as any,
+      logger: logger as any,
+    } as unknown as createOrdersDependencies;
+
     jest.clearAllMocks();
   });
 
-  it('debería retornar la respuesta de _201_CREATED_ cuando no hay errores', async () => {
-    const mockResponse = {
-      statusCode: 201,
-      body: JSON.stringify({ ok: true }),
-      headers: { 'content-type': 'application/json' },
-    };
-
-    (_201_CREATED_ as jest.Mock).mockReturnValue(mockResponse);
+  it('debe llamar al repositorio con el input, loguear y devolver la respuesta del repositorio', async () => {
+    const created = { orderId: 'abc-123', status: 'CREATED' };
+    (dependencies.repository.createOrders as jest.Mock).mockResolvedValue(created);
 
     const uc = useCaseCreateOrders();
     const result = await uc(dependencies, input);
 
-    expect(_201_CREATED_).toHaveBeenCalledWith(input);
-    expect(result).toEqual(mockResponse);
-    expect(AppError.invalidInput).not.toHaveBeenCalled();
+    expect(dependencies.repository.createOrders).toHaveBeenCalledTimes(1);
+    expect(dependencies.repository.createOrders).toHaveBeenCalledWith(input);
+
+    expect(dependencies.logger.info).toHaveBeenCalledWith('✅ order', created);
+    expect(result).toBe(created);
   });
 
-  it('debería capturar errores y retornar AppError.invalidInput(message)', async () => {
-    const thrown = new Error('payload inválido');
-    (_201_CREATED_ as jest.Mock).mockImplementation(() => {
-      throw thrown;
-    });
-
-    const mappedError = {
-      statusCode: 400,
-      body: JSON.stringify({ message: 'invalid input' }),
-    };
-    (AppError.invalidInput as jest.Mock).mockReturnValue(mappedError);
+  it('propaga el error si el repositorio rechaza', async () => {
+    const err = new Error('db fail');
+    (dependencies.repository.createOrders as jest.Mock).mockRejectedValue(err);
 
     const uc = useCaseCreateOrders();
-    const result = await uc(dependencies, input);
 
-    expect(_201_CREATED_).toHaveBeenCalledWith(input);
-    expect(AppError.invalidInput).toHaveBeenCalledWith('payload inválido');
-    expect(result).toEqual(mappedError);
+    await expect(uc(dependencies, input)).rejects.toThrow(err);
+    expect(dependencies.repository.createOrders).toHaveBeenCalledWith(input);
+    expect(dependencies.logger.info).not.toHaveBeenCalled();
   });
 });

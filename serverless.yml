@@ -25,6 +25,7 @@ params:
     logLevel: INFO
 
 plugins:
+  - serverless-dynamodb-local
   - serverless-offline
   - serverless-esbuild
 
@@ -36,6 +37,22 @@ custom:
     target: node18
     platform: node
     concurrency: 10
+  dynamodb:
+    stages:
+      - dev
+    start:
+      port: 8000
+      inMemory: true # o false si quieres persistir en ./.dynamodb
+      migrate: true # <— crea tablas locales a partir de resources
+      seed: true # <— opcional: carga data semilla
+      noStart: false
+    seed:
+      dev:
+        sources:
+          - table: ${self:provider.environment.PRODUCTS_TABLE_NAME}
+            sources: [./seed/products.json]
+          - table: ${self:provider.environment.ORDERS_TABLE_NAME}
+            sources: [./seed/orders.json]
 
 functions:
   createOrder:
