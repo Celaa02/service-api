@@ -1,7 +1,6 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 
-import { getByUserOrdersDependencies } from '../domain/case/dependencies/getByUserOrders/getByUserOrdersDepencies';
-import { statusConfirmOders } from '../domain/case/statusConfirmOders';
+import { statusConfirmOders } from '../case/statusConfirmOders/statusConfirmOders';
 import { confirmStatusOrdersHttpAdapter } from '../infrastructure/adapters/confirmStatusOrdersAdaptersHttp';
 import { OrderRepositoryDynamoDB } from '../infrastructure/repository/dynamonDBRepository';
 import { _200_OK_, _404_NOT_FOUND_ } from '../utils/HttpResponse';
@@ -9,6 +8,7 @@ import { toHttpResponse } from '../utils/HttpResponseErrors';
 import { logger } from '../utils/Logger';
 import { validationHttps } from '../utils/ValidationsHttps';
 import { statusConfirmOrdersSchema } from './schemas/statusConfirmOrdersSchemaHttp';
+import { getByUserOrdersDependencies } from '../case/useCaseGetByUserOders/getByUserOrdersDepencies';
 
 const factory = (): getByUserOrdersDependencies => ({
   repository: new OrderRepositoryDynamoDB(),

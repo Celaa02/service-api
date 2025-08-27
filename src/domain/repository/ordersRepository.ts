@@ -4,7 +4,7 @@ import {
   orderByUser,
   orderListResponse,
   ordersByIdResponse,
-} from '../models/OrdersModelsHttp';
+} from '../models/OrdersModels';
 
 export interface OrdersRepository {
   createOrders(order: createOrders): Promise<void>;

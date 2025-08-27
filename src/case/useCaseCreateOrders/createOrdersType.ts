@@ -1,5 +1,5 @@
 import { createOrdersDependencies } from './CreateOrdersDepencies';
-import { createOrders } from '../../../models/OrdersModelsHttp';
+import { createOrders } from '../../domain/models/OrdersModels';
 
 export type createOrderType = (
   event: createOrdersDependencies,

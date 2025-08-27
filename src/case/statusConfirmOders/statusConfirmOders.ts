@@ -1,6 +1,6 @@
-import { confirmOrder } from '../models/OrdersModelsHttp';
-import { statusConfirmOrdersDependencies } from './dependencies/statusConfirmOrders/statusConfirmOrdersDepencies';
-import { statusConfirmOrderType } from './dependencies/statusConfirmOrders/statusConfrimOrdersType';
+import { statusConfirmOrdersDependencies } from './statusConfirmOrdersDepencies';
+import { statusConfirmOrderType } from './statusConfrimOrdersType';
+import { confirmOrder } from '../../domain/models/OrdersModels';
 
 export const statusConfirmOders =
   (): statusConfirmOrderType =>

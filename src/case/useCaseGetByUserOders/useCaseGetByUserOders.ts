@@ -1,6 +1,6 @@
-import { orderByUser } from '../models/OrdersModelsHttp';
-import { getByUserOrdersDependencies } from './dependencies/getByUserOrders/getByUserOrdersDepencies';
-import { getByUsrOrderType } from './dependencies/getByUserOrders/getByUserOrdersType';
+import { getByUserOrdersDependencies } from './getByUserOrdersDepencies';
+import { getByUsrOrderType } from './getByUserOrdersType';
+import { orderByUser } from '../../domain/models/OrdersModels';
 
 export const useCaseGetByUserOrders =
   (): getByUsrOrderType =>

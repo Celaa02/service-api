@@ -1,7 +1,5 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 
-import { getByIdOrdersDependencies } from '../domain/case/dependencies/getByIdOrders/getByIdOrdersDepencies';
-import { useCaseGetByIdOrders } from '../domain/case/useCaseGetByIdOrders';
 import { getByIdOrdersHttpAdapter } from '../infrastructure/adapters/getByIdOrdersAdaptersHttp';
 import { OrderRepositoryDynamoDB } from '../infrastructure/repository/dynamonDBRepository';
 import { _200_OK_, _404_NOT_FOUND_ } from '../utils/HttpResponse';
@@ -9,6 +7,8 @@ import { toHttpResponse } from '../utils/HttpResponseErrors';
 import { logger } from '../utils/Logger';
 import { validationHttps } from '../utils/ValidationsHttps';
 import { getByIdOrdersSchema } from './schemas/getByIdOrdersSchemaHttp';
+import { getByIdOrdersDependencies } from '../case/useCaseGetByIdOrders/getByIdOrdersDepencies';
+import { useCaseGetByIdOrders } from '../case/useCaseGetByIdOrders/useCaseGetByIdOrders';
 
 const factory = (): getByIdOrdersDependencies => ({
   repository: new OrderRepositoryDynamoDB(),

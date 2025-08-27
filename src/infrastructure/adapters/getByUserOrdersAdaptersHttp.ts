@@ -1,7 +1,7 @@
 import { APIGatewayProxyEvent } from 'aws-lambda';
 
-import { getByUserOrdersDependencies } from '../../domain/case/dependencies/getByUserOrders/getByUserOrdersDepencies';
-import { getByUsrOrderType } from '../../domain/case/dependencies/getByUserOrders/getByUserOrdersType';
+import { getByUserOrdersDependencies } from '../../case/useCaseGetByUserOders/getByUserOrdersDepencies';
+import { getByUsrOrderType } from '../../case/useCaseGetByUserOders/getByUserOrdersType';
 
 export const getByUserOrdersHttpAdapter =
   (doCase: getByUsrOrderType) =>

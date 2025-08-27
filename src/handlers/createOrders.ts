@@ -1,7 +1,7 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 
-import { createOrdersDependencies } from '../domain/case/dependencies/createOrders/CreateOrdersDepencies';
-import { useCaseCreateOrders } from '../domain/case/useCaseCreateOrders';
+import { createOrdersDependencies } from '../case/useCaseCreateOrders/CreateOrdersDepencies';
+import { useCaseCreateOrders } from '../case/useCaseCreateOrders/useCaseCreateOrders';
 import { OrderRepositoryDynamoDB } from '../infrastructure/repository/dynamonDBRepository';
 import { _201_CREATED_ } from '../utils/HttpResponse';
 import { toHttpResponse } from '../utils/HttpResponseErrors';

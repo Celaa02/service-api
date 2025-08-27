@@ -7,7 +7,7 @@ import {
   orderListItem,
   orderListResponse,
   ordersByIdResponse,
-} from '../../domain/models/OrdersModelsHttp';
+} from '../../domain/models/OrdersModels';
 import { OrdersRepository } from '../../domain/repository/ordersRepository';
 import { mapDynamoError } from '../../utils/mapDynamonError';
 import { ddbDoc } from '../database/DynamonDB';

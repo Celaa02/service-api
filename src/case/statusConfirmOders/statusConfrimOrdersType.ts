@@ -1,5 +1,5 @@
 import { statusConfirmOrdersDependencies } from './statusConfirmOrdersDepencies';
-import { confirmOrder } from '../../../models/OrdersModelsHttp';
+import { confirmOrder } from '../../domain/models/OrdersModels';
 
 export type statusConfirmOrderType = (
   event: statusConfirmOrdersDependencies,
