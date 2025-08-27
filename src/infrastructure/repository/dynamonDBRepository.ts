@@ -1,6 +1,7 @@
-import { GetCommand, PutCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
+import { GetCommand, PutCommand, QueryCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
 
 import {
+  confirmOrder,
   itemCreateOrder,
   orderByUser,
   orderListItem,
@@ -88,6 +89,49 @@ export class OrderRepositoryDynamoDB implements OrdersRepository {
 
       return { items, nextCursor };
     } catch (err: any) {
+      console.error('RAW DynamoDB error =>', err);
+      throw mapDynamoError(err);
+    }
+  }
+
+  async confirmOrder(data: confirmOrder): Promise<ordersByIdResponse | null> {
+    try {
+      const orderId = data.orderId;
+
+      const res = await ddbDoc.send(
+        new UpdateCommand({
+          TableName: process.env.ORDERS_TABLE_NAME!,
+          Key: { orderId },
+          ConditionExpression: 'attribute_exists(orderId) AND #status = :created',
+          UpdateExpression: 'SET #status = :confirmed, #paymentId = :pid',
+          ExpressionAttributeNames: {
+            '#status': 'status',
+            '#paymentId': 'paymentId',
+          },
+          ExpressionAttributeValues: {
+            ':created': 'CREATED',
+            ':confirmed': 'CONFIRMED',
+            ':pid': data.paymentId,
+          },
+          ReturnValues: 'ALL_NEW',
+        }),
+      );
+
+      const item = res.Attributes as itemCreateOrder;
+
+      return {
+        orderId: item.orderId,
+        userId: item.userId,
+        items: item.items ?? [],
+        total: item.total ?? 0,
+        createdAt: item.createdAt,
+        status: item.status,
+        paymentId: (item as any).paymentId,
+      } as unknown as ordersByIdResponse;
+    } catch (err: any) {
+      if (err?.name === 'ConditionalCheckFailedException') {
+        return null;
+      }
       console.error('RAW DynamoDB error =>', err);
       throw mapDynamoError(err);
     }

@@ -89,6 +89,12 @@ functions:
       - httpApi:
           method: GET
           path: /users/orders/{userId}
+  confirmOrder:
+    handler: src/handlers/statusOrdersConfirm.handler
+    events:
+      - httpApi:
+          method: PATCH
+          path: /orders/confirm/{orderId}
 
 resources:
   Resources:

@@ -49,3 +49,8 @@ export type orderListResponse = {
   items: orderListItem[];
   nextCursor?: string;
 };
+
+export interface confirmOrder {
+  orderId: string;
+  paymentId: string;
+}
