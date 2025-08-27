@@ -19,15 +19,33 @@ export interface itemCreateOrder {
   total: number;
 }
 
-export interface orderByIdResponse {
+export interface orderById {
+  orderId: string;
+}
+
+export interface orderByUser {
+  userId: string;
+  limit: number;
+  cursor?: string | null;
+}
+
+export type ordersByIdResponse = {
   orderId: string;
   userId: string;
   items: itemsOrders[];
   total: number;
   createdAt: string;
   status: string;
-}
+};
 
-export interface orderById {
-  orderId: string;
-}
+export type orderListItem = {
+  id: string;
+  total: number;
+  createdAt: string;
+  status: string;
+};
+
+export type orderListResponse = {
+  items: orderListItem[];
+  nextCursor?: string;
+};

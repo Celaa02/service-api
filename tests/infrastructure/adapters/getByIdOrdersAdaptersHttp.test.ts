@@ -64,7 +64,9 @@ describe('getByIdOrdersHttpAdapter', () => {
     const adapter = getByIdOrdersHttpAdapter(doCase);
     const event = makeEvent(undefined);
 
-    await expect(adapter(event, dependencies)).rejects.toThrow('Request body is required');
+    await expect(adapter(event, dependencies)).rejects.toThrow(
+      'Request pathParameters is required',
+    );
 
     expect(doCase).not.toHaveBeenCalled();
     expect(dependencies.logger.info).toHaveBeenCalledWith(event);

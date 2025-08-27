@@ -1,4 +1,4 @@
-import { itemCreateOrder } from '../../../src/domain/models/OrdersModelsHttp';
+import { itemCreateOrder, orderByUser } from '../../../src/domain/models/OrdersModelsHttp';
 import { ddbDoc } from '../../../src/infrastructure/database/DynamonDB';
 import { OrderRepositoryDynamoDB } from '../../../src/infrastructure/repository/dynamonDBRepository';
 import { mapDynamoError } from '../../../src/utils/mapDynamonError';
@@ -13,6 +13,7 @@ jest.mock('@aws-sdk/lib-dynamodb', () => {
     ...actual,
     PutCommand: jest.fn().mockImplementation((input) => ({ input })),
     GetCommand: jest.fn().mockImplementation((input) => ({ input })),
+    QueryCommand: jest.fn().mockImplementation((input) => ({ input })),
   };
 });
 
@@ -167,6 +168,78 @@ describe('OrderRepositoryDynamoDB', () => {
       await expect(repo.getOrderById('abc')).rejects.toBe(mapped);
 
       expect(ddbDoc.send).toHaveBeenCalledTimes(1);
+      expect(mapDynamoError).toHaveBeenCalledWith(rawError);
+    });
+  });
+
+  describe('listOrdersByUser', () => {
+    it('retorna items mapeados y sin nextCursor cuando no hay LastEvaluatedKey', async () => {
+      const repo = new OrderRepositoryDynamoDB();
+
+      (ddbDoc.send as jest.Mock).mockResolvedValue({
+        Items: [
+          { orderId: 'o1', total: 50, createdAt: '2025-01-01', status: 'CONFIRMED' },
+          { orderId: 'o2', createdAt: '2025-01-02' }, // sin total ni status
+        ],
+      });
+
+      const input: orderByUser = { userId: 'u1', limit: 10 };
+      const res = await repo.listOrdersByUser(input);
+
+      expect(ddbDoc.send).toHaveBeenCalledTimes(1);
+      const sentCmd = (ddbDoc.send as jest.Mock).mock.calls[0][0] as { input: any };
+      expect(sentCmd.input.TableName).toBe('aws-crud-api-dev-orders');
+      expect(sentCmd.input.IndexName).toBe('UserOrdersIndex');
+      expect(sentCmd.input.ExpressionAttributeValues).toEqual({ ':uid': 'u1' });
+
+      expect(res).toEqual({
+        items: [
+          { id: 'o1', total: 50, createdAt: '2025-01-01', status: 'CONFIRMED' },
+          { id: 'o2', total: 0, createdAt: '2025-01-02', status: 'PENDING' },
+        ],
+        nextCursor: undefined,
+      });
+    });
+
+    it('incluye ExclusiveStartKey cuando se pasa cursor', async () => {
+      const repo = new OrderRepositoryDynamoDB();
+
+      const startKey = { orderId: 'prev' };
+      const cursor = Buffer.from(JSON.stringify(startKey)).toString('base64');
+
+      (ddbDoc.send as jest.Mock).mockResolvedValue({ Items: [] });
+
+      await repo.listOrdersByUser({ userId: 'u1', limit: 5, cursor });
+
+      const sentCmd = (ddbDoc.send as jest.Mock).mock.calls[0][0] as { input: any };
+      expect(sentCmd.input.ExclusiveStartKey).toEqual(startKey);
+    });
+
+    it('retorna nextCursor cuando hay LastEvaluatedKey', async () => {
+      const repo = new OrderRepositoryDynamoDB();
+
+      const lastKey = { orderId: 'last' };
+      (ddbDoc.send as jest.Mock).mockResolvedValue({
+        Items: [],
+        LastEvaluatedKey: lastKey,
+      });
+
+      const res = await repo.listOrdersByUser({ userId: 'u1', limit: 2 });
+
+      expect(res.nextCursor).toBe(Buffer.from(JSON.stringify(lastKey)).toString('base64'));
+    });
+
+    it('mapea y relanza el error si ddbDoc.send falla', async () => {
+      const repo = new OrderRepositoryDynamoDB();
+
+      const rawError = new Error('boom');
+      (ddbDoc.send as jest.Mock).mockRejectedValue(rawError);
+
+      const mapped = new Error('mapped');
+      (mapDynamoError as jest.Mock).mockReturnValue(mapped);
+
+      await expect(repo.listOrdersByUser({ userId: 'u1', limit: 1 })).rejects.toBe(mapped);
+
       expect(mapDynamoError).toHaveBeenCalledWith(rawError);
     });
   });

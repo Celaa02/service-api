@@ -10,7 +10,7 @@ export const getByIdOrdersHttpAdapter =
     const id = event.pathParameters?.id;
 
     if (!id) {
-      throw new Error('Request body is required');
+      throw new Error('Request pathParameters is required');
     }
     const response = await doCase(dependencies, {
       orderId: id,
