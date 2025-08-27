@@ -14,21 +14,21 @@ provider:
     LOG_LEVEL: ${param:logLevel}
     IS_OFFLINE: ${env:IS_OFFLINE, 'false'}
 
-  # iamRoleStatements:
-  #   - Effect: Allow
-  #     Action:
-  #       - dynamodb:DescribeTable
-  #       - dynamodb:PutItem
-  #       - dynamodb:GetItem
-  #       - dynamodb:Query
-  #       - dynamodb:UpdateItem
-  #       - dynamodb:DeleteItem
-  #       - dynamodb:BatchWriteItem
-  #       - dynamodb:BatchGetItem
-  #     Resource:
-  #       - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${self:provider.environment.ORDERS_TABLE_NAME}
-  #       - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${self:provider.environment.PRODUCTS_TABLE_NAME}
-  #       - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${self:provider.environment.ORDERS_TABLE_NAME}/index/*
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:DescribeTable
+        - dynamodb:PutItem
+        - dynamodb:GetItem
+        - dynamodb:Query
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+        - dynamodb:BatchWriteItem
+        - dynamodb:BatchGetItem
+      Resource:
+        - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${self:provider.environment.ORDERS_TABLE_NAME}
+        - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${self:provider.environment.PRODUCTS_TABLE_NAME}
+        - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${self:provider.environment.ORDERS_TABLE_NAME}/index/*
 
 params:
   dev:
