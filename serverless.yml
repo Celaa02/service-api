@@ -101,6 +101,12 @@ functions:
       - httpApi:
           method: POST
           path: /products
+  listProducts:
+    handler: src/handlers/listProducts.handler
+    events:
+      - httpApi:
+          method: GET
+          path: /products
 
 resources:
   Resources:
