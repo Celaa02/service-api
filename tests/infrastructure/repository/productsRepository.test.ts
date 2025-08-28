@@ -292,4 +292,136 @@ describe('ProductRepositoryDynamoDB.createProduct', () => {
       consoleSpy.mockRestore();
     });
   });
+
+  describe('ProductRepositoryDynamoDB.getProductById', () => {
+    const ORIGINAL_ENV = { ...process.env };
+
+    beforeEach(() => {
+      jest.resetModules();
+      jest.clearAllMocks();
+      process.env = { ...ORIGINAL_ENV, PRODUCTS_TABLE_NAME: 'aws-crud-api-dev-products' };
+    });
+
+    afterEach(() => {
+      process.env = ORIGINAL_ENV;
+    });
+
+    it('retorna el productResponse mapeado cuando el Item existe (status por defecto ACTIVE si falta)', async () => {
+      // Mocks compartidos
+      const sendMock = jest.fn().mockResolvedValue({
+        Item: {
+          productId: 'p-1',
+          name: 'Mouse',
+          price: 35,
+          stock: 50,
+          createdAt: '2025-01-02T00:00:00.000Z',
+        },
+      });
+      const getCommandMock = jest.fn().mockImplementation((input) => ({ input }));
+      const mapDynamoErrorMock = jest.fn();
+
+      jest.doMock('../../../src/infrastructure/database/DynamonDB', () => ({
+        ddbDoc: { send: sendMock },
+      }));
+      jest.doMock('@aws-sdk/lib-dynamodb', () => ({
+        GetCommand: getCommandMock,
+        PutCommand: jest.fn().mockImplementation((input) => ({ input })),
+      }));
+      jest.doMock('../../../src/utils/mapDynamonError', () => ({
+        mapDynamoError: mapDynamoErrorMock,
+      }));
+
+      const { ProductRepositoryDynamoDB } = await import(
+        '../../../src/infrastructure/repository/productsRepository'
+      );
+      const repo = new ProductRepositoryDynamoDB();
+
+      const out = await repo.getProductById('p-1');
+
+      expect(getCommandMock).toHaveBeenCalledTimes(1);
+      expect(sendMock).toHaveBeenCalledTimes(1);
+      const sentCmd = sendMock.mock.calls[0][0] as { input: any };
+      expect(sentCmd.input.TableName).toBe('aws-crud-api-dev-products');
+      expect(sentCmd.input.Key).toEqual({ productId: 'p-1' });
+
+      expect(out).toEqual({
+        productId: 'p-1',
+        name: 'Mouse',
+        price: 35,
+        stock: 50,
+        status: 'ACTIVE',
+        createdAt: '2025-01-02T00:00:00.000Z',
+      });
+
+      expect(mapDynamoErrorMock).not.toHaveBeenCalled();
+    });
+
+    it('retorna null cuando no existe Item en la respuesta', async () => {
+      const sendMock = jest.fn().mockResolvedValue({});
+      const getCommandMock = jest.fn().mockImplementation((input) => ({ input }));
+      const mapDynamoErrorMock = jest.fn();
+
+      jest.doMock('../../../src/infrastructure/database/DynamonDB', () => ({
+        ddbDoc: { send: sendMock },
+      }));
+      jest.doMock('@aws-sdk/lib-dynamodb', () => ({
+        GetCommand: getCommandMock,
+        PutCommand: jest.fn().mockImplementation((input) => ({ input })),
+      }));
+      jest.doMock('../../../src/utils/mapDynamonError', () => ({
+        mapDynamoError: mapDynamoErrorMock,
+      }));
+
+      const { ProductRepositoryDynamoDB } = await import(
+        '../../../src/infrastructure/repository/productsRepository'
+      );
+      const repo = new ProductRepositoryDynamoDB();
+
+      const out = await repo.getProductById('p-404');
+
+      expect(sendMock).toHaveBeenCalledTimes(1);
+      const sentCmd = sendMock.mock.calls[0][0] as { input: any };
+      expect(sentCmd.input.TableName).toBe('aws-crud-api-dev-products');
+      expect(sentCmd.input.Key).toEqual({ productId: 'p-404' });
+
+      expect(out).toBeNull();
+      expect(mapDynamoErrorMock).not.toHaveBeenCalled();
+    });
+
+    it('mapea y relanza el error si ddbDoc.send falla', async () => {
+      const rawError = new Error('get failed');
+      const sendMock = jest.fn().mockRejectedValue(rawError);
+      const getCommandMock = jest.fn().mockImplementation((input) => ({ input }));
+      const mapped = new Error('mapped-error');
+      const mapDynamoErrorMock = jest.fn().mockReturnValue(mapped);
+
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+
+      jest.doMock('../../../src/infrastructure/database/DynamonDB', () => ({
+        ddbDoc: { send: sendMock },
+      }));
+      jest.doMock('@aws-sdk/lib-dynamodb', () => ({
+        GetCommand: getCommandMock,
+        PutCommand: jest.fn().mockImplementation((input) => ({ input })),
+      }));
+      jest.doMock('../../../src/utils/mapDynamonError', () => ({
+        mapDynamoError: mapDynamoErrorMock,
+      }));
+
+      const { ProductRepositoryDynamoDB } = await import(
+        '../../../src/infrastructure/repository/productsRepository'
+      );
+      const repo = new ProductRepositoryDynamoDB();
+
+      await expect(repo.getProductById('p-err')).rejects.toBe(mapped);
+
+      expect(sendMock).toHaveBeenCalledTimes(1);
+      const sentCmd = sendMock.mock.calls[0][0] as { input: any };
+      expect(sentCmd.input.TableName).toBe('aws-crud-api-dev-products');
+      expect(sentCmd.input.Key).toEqual({ productId: 'p-err' });
+
+      expect(mapDynamoErrorMock).toHaveBeenCalledWith(rawError);
+      consoleSpy.mockRestore();
+    });
+  });
 });
