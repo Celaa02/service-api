@@ -1,7 +1,7 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 
 import { handler } from '../../src/handlers/getProductsById';
-import { getByIdProductsSchema } from '../../src/handlers/schemas/Products/getByIdOrdersSchemaHttp';
+import { getByIdProductsSchema } from '../../src/handlers/schemas/Products/getByIdProductsSchemaHttp';
 import { getByIdProductsHttpAdapter } from '../../src/infrastructure/adapters/Products/getByIdProductsAdaptersHttp';
 import { _200_OK_, _404_NOT_FOUND_ } from '../../src/utils/HttpResponse';
 import { toHttpResponse } from '../../src/utils/HttpResponseErrors';

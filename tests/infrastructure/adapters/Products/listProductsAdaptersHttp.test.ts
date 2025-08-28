@@ -5,7 +5,7 @@ import { listProductsType } from '../../../../src/case/useCaseListProducts/listP
 import { listProductsHttpAdapter } from '../../../../src/infrastructure/adapters/Products/listProductsAdaptersHttp';
 
 describe('listProductsHttpAdapter', () => {
-  const makeEvent = (limit?: string, cursor?: string): APIGatewayProxyEvent =>
+  const makeEvent = (): APIGatewayProxyEvent =>
     ({
       body: null,
       headers: {},
@@ -15,8 +15,7 @@ describe('listProductsHttpAdapter', () => {
       multiValueQueryStringParameters: null,
       path: '/products',
       pathParameters: null,
-      queryStringParameters:
-        limit !== undefined || cursor !== undefined ? ({ limit, cursor } as any) : undefined,
+      queryStringParameters: { limit: '10' } as any,
       requestContext: {} as any,
       resource: '/products',
       stageVariables: null,
@@ -32,58 +31,42 @@ describe('listProductsHttpAdapter', () => {
     jest.clearAllMocks();
   });
 
-  it('loguea el evento, castea limit a número, pasa cursor y retorna la respuesta del use case', async () => {
-    const doCase: jest.MockedFunction<listProductsType> = jest.fn().mockResolvedValue({
+  it('loguea el evento, llama al use case con dependencies y retorna su respuesta', async () => {
+    const expected = {
       items: [
         {
-          productId: 'p-1',
-          name: 'Teclado',
-          price: 120.5,
-          stock: 10,
+          productId: 'p1',
+          name: 'Mouse',
+          price: 35,
+          status: 'ACTIVE',
           createdAt: '2025-01-01T00:00:00.000Z',
         },
       ],
-      nextCursor: 'abc',
-    });
+      nextCursor: undefined,
+    };
+
+    const doCase: jest.MockedFunction<listProductsType> = jest.fn().mockResolvedValue(expected);
 
     const adapter = listProductsHttpAdapter(doCase);
-    const event = makeEvent('25', 'fooCursor');
-
+    const event = makeEvent();
     const result = await adapter(event, dependencies);
 
     expect(dependencies.logger.info).toHaveBeenCalledWith(event);
 
     expect(doCase).toHaveBeenCalledTimes(1);
-    expect(doCase).toHaveBeenCalledWith(dependencies, {
-      limit: 25,
-      cursor: 'fooCursor',
-    });
-
-    expect(result).toEqual({
-      items: [
-        {
-          productId: 'p-1',
-          name: 'Teclado',
-          price: 120.5,
-          stock: 10,
-          createdAt: '2025-01-01T00:00:00.000Z',
-        },
-      ],
-      nextCursor: 'abc',
-    });
+    expect(doCase).toHaveBeenCalledWith(dependencies);
+    expect(result).toBe(expected);
   });
 
-  it('lanza error si falta queryStringParameters.limit', async () => {
-    const doCase: jest.MockedFunction<listProductsType> = jest.fn();
+  it('propaga el error si el use case lanza (y loguea el evento)', async () => {
+    const thrown = new Error('boom');
+    const doCase: jest.MockedFunction<listProductsType> = jest.fn().mockRejectedValue(thrown);
 
     const adapter = listProductsHttpAdapter(doCase);
-    const event = makeEvent(undefined, 'cursorX');
+    const event = makeEvent();
 
-    await expect(adapter(event, dependencies)).rejects.toThrow(
-      'Request queryStringParameters is required',
-    );
-
-    expect(doCase).not.toHaveBeenCalled();
+    await expect(adapter(event, dependencies)).rejects.toThrow(thrown);
     expect(dependencies.logger.info).toHaveBeenCalledWith(event);
+    expect(doCase).toHaveBeenCalledWith(dependencies);
   });
 });

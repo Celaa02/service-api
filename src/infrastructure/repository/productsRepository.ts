@@ -1,12 +1,6 @@
-import { GetCommand, PutCommand } from '@aws-sdk/lib-dynamodb';
+import { GetCommand, PutCommand, ScanCommand } from '@aws-sdk/lib-dynamodb';
 
-import {
-  listProduct,
-  productCreate,
-  ProductListItem,
-  ProductListResponse,
-  productResponse,
-} from '../../domain/models/ProductsMondels';
+import { productCreate, productResponse } from '../../domain/models/ProductsMondels';
 import { ProductsRepository } from '../../domain/repository/productsRepository';
 import { mapDynamoError } from '../../utils/mapDynamonError';
 import { ddbDoc } from '../database/DynamonDB';
@@ -64,36 +58,15 @@ export class ProductRepositoryDynamoDB implements ProductsRepository {
     }
   }
 
-  async listProducts(data: listProduct): Promise<ProductListResponse> {
+  async listAll(): Promise<productResponse[]> {
     try {
-      const params: any = {
-        TableName: PRODUCTS_TABLE,
-        Limit: data.limit,
-      };
-
-      if (data.cursor) {
-        params.ExclusiveStartKey = JSON.parse(Buffer.from(data.cursor, 'base64').toString('utf8'));
-      }
-
-      const { ScanCommand } = await import('@aws-sdk/lib-dynamodb');
-      const res = await ddbDoc.send(new ScanCommand(params));
-
-      const items: ProductListItem[] =
-        res.Items?.map((it: any) => ({
-          productId: it.productId,
-          name: it.name,
-          price: it.price ?? 0,
-          status: it.status ?? 'ACTIVE',
-          createdAt: it.createdAt,
-        })) ?? [];
-
-      const nextCursor = res.LastEvaluatedKey
-        ? Buffer.from(JSON.stringify(res.LastEvaluatedKey)).toString('base64')
-        : undefined;
-
-      return { items, nextCursor };
+      const res = await ddbDoc.send(
+        new ScanCommand({
+          TableName: PRODUCTS_TABLE,
+        }),
+      );
+      return (res.Items as productResponse[]) ?? [];
     } catch (err: any) {
-      console.error('RAW DynamoDB error =>', err);
       throw mapDynamoError(err);
     }
   }

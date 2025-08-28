@@ -8,7 +8,7 @@ import { _200_OK_, _404_NOT_FOUND_ } from '../utils/HttpResponse';
 import { toHttpResponse } from '../utils/HttpResponseErrors';
 import { logger } from '../utils/Logger';
 import { validationHttps } from '../utils/ValidationsHttps';
-import { getByIdProductsSchema } from './schemas/Products/getByIdOrdersSchemaHttp';
+import { getByIdProductsSchema } from './schemas/Products/getByIdProductsSchemaHttp';
 
 const factory = (): getByIdProductsDependencies => ({
   repository: new ProductRepositoryDynamoDB(),

@@ -1,64 +1,59 @@
 import { listProductsDependencies } from '../../src/case/useCaseListProducts/listProductsDepencies';
 import { useCaseListProducts } from '../../src/case/useCaseListProducts/useCaseListProducts';
-import { listProduct } from '../../src/domain/models/ProductsMondels';
 
 describe('useCaseListProducts', () => {
   let dependencies: listProductsDependencies;
 
-  const input: listProduct = {
-    limit: 10,
-    cursor: undefined,
-  } as any;
-
   beforeEach(() => {
-    const repository = {
-      listProducts: jest.fn(),
-    };
-    const logger = {
-      info: jest.fn(),
-    };
-
     dependencies = {
-      repository: repository as any,
-      logger: logger as any,
+      repository: {
+        listAll: jest.fn(),
+      } as any,
+      logger: {
+        info: jest.fn(),
+      } as any,
     };
-
     jest.clearAllMocks();
   });
 
-  it('debe llamar al repositorio con el input, loguear y devolver la respuesta', async () => {
+  it('debe llamar al repositorio, loguear y devolver la respuesta', async () => {
     const repoResponse = {
       items: [
         {
-          productId: 'p-1',
-          name: 'Teclado',
-          price: 120.5,
-          stock: 10,
+          productId: 'p1',
+          name: 'Mouse',
+          price: 35,
+          status: 'ACTIVE',
           createdAt: '2025-01-01T00:00:00.000Z',
+        },
+        {
+          productId: 'p2',
+          name: 'Teclado',
+          price: 120,
+          status: 'ACTIVE',
+          createdAt: '2025-01-02T00:00:00.000Z',
         },
       ],
       nextCursor: undefined,
     };
-    (dependencies.repository.listProducts as jest.Mock).mockResolvedValue(repoResponse);
+    (dependencies.repository.listAll as jest.Mock).mockResolvedValue(repoResponse);
 
     const uc = useCaseListProducts();
-    const result = await uc(dependencies, input);
+    const result = await uc(dependencies);
 
-    expect(dependencies.repository.listProducts).toHaveBeenCalledTimes(1);
-    expect(dependencies.repository.listProducts).toHaveBeenCalledWith(input);
-
+    expect(dependencies.repository.listAll).toHaveBeenCalledTimes(1);
     expect(dependencies.logger.info).toHaveBeenCalledWith('✅ list products', repoResponse);
     expect(result).toBe(repoResponse);
   });
 
-  it('propaga el error si el repositorio rechaza y no loguea éxito', async () => {
-    const err = new Error('repo fail');
-    (dependencies.repository.listProducts as jest.Mock).mockRejectedValue(err);
+  it('propaga el error si el repositorio falla y no loguea éxito', async () => {
+    const err = new Error('db fail');
+    (dependencies.repository.listAll as jest.Mock).mockRejectedValue(err);
 
     const uc = useCaseListProducts();
 
-    await expect(uc(dependencies, input)).rejects.toThrow(err);
-    expect(dependencies.repository.listProducts).toHaveBeenCalledWith(input);
+    await expect(uc(dependencies)).rejects.toThrow(err);
+    expect(dependencies.repository.listAll).toHaveBeenCalledTimes(1);
     expect(dependencies.logger.info).not.toHaveBeenCalled();
   });
 });
