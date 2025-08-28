@@ -1,4 +1,4 @@
-import { PutCommand } from '@aws-sdk/lib-dynamodb';
+import { GetCommand, PutCommand } from '@aws-sdk/lib-dynamodb';
 
 import {
   listProduct,
@@ -31,6 +31,32 @@ export class ProductRepositoryDynamoDB implements ProductsRepository {
         stock: input.stock,
         status: input.status ?? 'ACTIVE',
         createdAt: input.createdAt,
+      };
+    } catch (err: any) {
+      console.error('RAW DynamoDB error =>', err);
+      throw mapDynamoError(err);
+    }
+  }
+
+  async getProductById(productId: string): Promise<productResponse | null> {
+    try {
+      const res = await ddbDoc.send(
+        new GetCommand({
+          TableName: PRODUCTS_TABLE,
+          Key: { productId },
+        }),
+      );
+
+      if (!res.Item) return null;
+
+      const it = res.Item as productResponse;
+      return {
+        productId: it.productId,
+        name: it.name,
+        price: it.price,
+        stock: it.stock,
+        status: it.status ?? 'ACTIVE',
+        createdAt: it.createdAt,
       };
     } catch (err: any) {
       console.error('RAW DynamoDB error =>', err);
