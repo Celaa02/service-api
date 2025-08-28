@@ -1,8 +1,8 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 
 import { handler } from '../../src/handlers/getOrdersByUser';
-import { getByUserOrdersSchema } from '../../src/handlers/schemas/getByUserOrdersSchemaHttp';
-import { getByUserOrdersHttpAdapter } from '../../src/infrastructure/adapters/getByUserOrdersAdaptersHttp';
+import { getByUserOrdersSchema } from '../../src/handlers/schemas/Orders/getByUserOrdersSchemaHttp';
+import { getByUserOrdersHttpAdapter } from '../../src/infrastructure/adapters/Orders/getByUserOrdersAdaptersHttp';
 import { _200_OK_ } from '../../src/utils/HttpResponse';
 import { toHttpResponse } from '../../src/utils/HttpResponseErrors';
 import { logger } from '../../src/utils/Logger';
@@ -28,11 +28,11 @@ jest.mock('../../src/utils/Logger', () => ({
   },
 }));
 
-jest.mock('../../src/infrastructure/repository/dynamonDBRepository', () => ({
+jest.mock('../../src/infrastructure/repository/ordersRepository', () => ({
   OrderRepositoryDynamoDB: jest.fn().mockImplementation(() => ({})),
 }));
 
-jest.mock('../../src/infrastructure/adapters/getByUserOrdersAdaptersHttp', () => ({
+jest.mock('../../src/infrastructure/adapters/Orders/getByUserOrdersAdaptersHttp', () => ({
   getByUserOrdersHttpAdapter: jest.fn(),
 }));
 

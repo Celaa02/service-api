@@ -22,7 +22,7 @@ const ORIGINAL_ENV = process.env;
 describe('logger (winston) con import', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    jest.resetModules(); // asegura que el módulo SUT se recargue por test
+    jest.resetModules();
     process.env = { ...ORIGINAL_ENV };
     delete process.env.IS_OFFLINE;
     delete process.env.STAGE;
@@ -36,9 +36,8 @@ describe('logger (winston) con import', () => {
   it('usa level "debug" y colorize/printf cuando IS_OFFLINE=true', async () => {
     process.env.IS_OFFLINE = 'true';
 
-    // Importamos el SUT y winston *después* de preparar el entorno
     const winston = await import('winston');
-    const { logger } = await import('../../src/utils/Logger'); // <- ajusta la ruta
+    const { logger } = await import('../../src/utils/Logger');
 
     expect(winston.createLogger).toHaveBeenCalledTimes(1);
     const call = (winston.createLogger as jest.Mock).mock.calls[0][0];
@@ -99,7 +98,7 @@ describe('logger (winston) con import', () => {
   });
 
   it('LOG_LEVEL tiene prioridad y se convierte a minúsculas', async () => {
-    process.env.LOG_LEVEL = 'WARN'; // -> 'warn'
+    process.env.LOG_LEVEL = 'WARN';
 
     const winston = await import('winston');
     await import('../../src/utils/Logger');

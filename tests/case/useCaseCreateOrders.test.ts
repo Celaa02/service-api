@@ -1,8 +1,8 @@
 import * as crypto from 'crypto';
 
-import { createOrdersDependencies } from '../../../src/domain/case/dependencies/createOrders/CreateOrdersDepencies';
-import { useCaseCreateOrders } from '../../../src/domain/case/useCaseCreateOrders';
-import { createOrders } from '../../../src/domain/models/OrdersModelsHttp';
+import { createOrdersDependencies } from '../../src/case/useCaseCreateOrders/CreateOrdersDepencies';
+import { useCaseCreateOrders } from '../../src/case/useCaseCreateOrders/useCaseCreateOrders';
+import { createOrders } from '../../src/domain/models/OrdersModels';
 
 jest.mock('crypto', () => {
   const actual = jest.requireActual('crypto');

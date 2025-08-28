@@ -1,6 +1,6 @@
-import { statusConfirmOrdersDependencies } from '../../../src/domain/case/dependencies/statusConfirmOrders/statusConfirmOrdersDepencies';
-import { statusConfirmOders } from '../../../src/domain/case/statusConfirmOders';
-import { confirmOrder } from '../../../src/domain/models/OrdersModelsHttp';
+import { statusConfirmOders } from '../../src/case/statusConfirmOders/statusConfirmOders';
+import { statusConfirmOrdersDependencies } from '../../src/case/statusConfirmOders/statusConfirmOrdersDepencies';
+import { confirmOrder } from '../../src/domain/models/OrdersModels';
 
 describe('statusConfirmOders use case', () => {
   let dependencies: statusConfirmOrdersDependencies;

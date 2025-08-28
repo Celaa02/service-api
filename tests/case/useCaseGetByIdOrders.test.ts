@@ -1,6 +1,6 @@
-import { getByIdOrdersDependencies } from '../../../src/domain/case/dependencies/getByIdOrders/getByIdOrdersDepencies';
-import { useCaseGetByIdOrders } from '../../../src/domain/case/useCaseGetByIdOrders';
-import { orderById } from '../../../src/domain/models/OrdersModelsHttp';
+import { getByIdOrdersDependencies } from '../../src/case/useCaseGetByIdOrders/getByIdOrdersDepencies';
+import { useCaseGetByIdOrders } from '../../src/case/useCaseGetByIdOrders/useCaseGetByIdOrders';
+import { orderById } from '../../src/domain/models/OrdersModels';
 
 describe('useCaseGetByIdOrders', () => {
   let dependencies: getByIdOrdersDependencies;

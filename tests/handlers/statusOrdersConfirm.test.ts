@@ -1,9 +1,8 @@
-// tests/handlers/statusConfirmOrders.handler.test.ts
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 
-import { statusConfirmOrdersSchema } from '../../src/handlers/schemas/statusConfirmOrdersSchemaHttp';
+import { statusConfirmOrdersSchema } from '../../src/handlers/schemas/Orders/statusConfirmOrdersSchemaHttp';
 import { handler } from '../../src/handlers/statusOrdersConfirm';
-import { confirmStatusOrdersHttpAdapter } from '../../src/infrastructure/adapters/confirmStatusOrdersAdaptersHttp';
+import { confirmStatusOrdersHttpAdapter } from '../../src/infrastructure/adapters/Orders/confirmStatusOrdersAdaptersHttp';
 import { _200_OK_, _404_NOT_FOUND_ } from '../../src/utils/HttpResponse';
 import { toHttpResponse } from '../../src/utils/HttpResponseErrors';
 import { logger } from '../../src/utils/Logger';
@@ -31,13 +30,11 @@ jest.mock('../../src/utils/Logger', () => ({
   },
 }));
 
-// Evita tocar Dynamo/Repo real: el adapter se mockea y devolverá la respuesta
-jest.mock('../../src/infrastructure/repository/dynamonDBRepository', () => ({
+jest.mock('../../src/infrastructure/repository/ordersRepository', () => ({
   OrderRepositoryDynamoDB: jest.fn().mockImplementation(() => ({})),
 }));
 
-// Mock del adapter (fábrica que devuelve una función)
-jest.mock('../../src/infrastructure/adapters/confirmStatusOrdersAdaptersHttp', () => ({
+jest.mock('../../src/infrastructure/adapters/Orders/confirmStatusOrdersAdaptersHttp', () => ({
   confirmStatusOrdersHttpAdapter: jest.fn(),
 }));
 
@@ -76,7 +73,6 @@ describe('statusConfirmOrders.handler', () => {
       body: JSON.stringify(adapterResponse),
     };
 
-    // Validación OK
     (validationHttps as jest.Mock).mockResolvedValue(validated);
 
     // Adapter factory devuelve función que retorna la respuesta
@@ -86,22 +82,17 @@ describe('statusConfirmOrders.handler', () => {
       return jest.fn(async (_event: APIGatewayProxyEvent, _deps: any) => adapterResponse);
     });
 
-    // _200_OK_ empaqueta la respuesta
     (_200_OK_ as jest.Mock).mockReturnValue(okResponse);
 
     const res = await handler(baseEvent);
 
-    // Validación con el schema correcto
     expect(validationHttps).toHaveBeenCalledWith(baseEvent, statusConfirmOrdersSchema);
 
-    // Se construyó el adapter y se usó
     expect(confirmStatusOrdersHttpAdapter).toHaveBeenCalledTimes(1);
 
-    // Retorna 200 con payload
     expect(_200_OK_).toHaveBeenCalledWith(adapterResponse);
     expect(res).toEqual(okResponse);
 
-    // Logs
     expect(logger.info).toHaveBeenCalledWith('📥 Incoming request', { event: baseEvent });
     expect(logger.debug).toHaveBeenCalledWith('✅ Validation passed', validated);
     expect(logger.info).toHaveBeenCalledWith('✅ Get order user', adapterResponse);
@@ -132,17 +123,14 @@ describe('statusConfirmOrders.handler', () => {
     expect(validationHttps).toHaveBeenCalledWith(baseEvent, statusConfirmOrdersSchema);
     expect(confirmStatusOrdersHttpAdapter).toHaveBeenCalledTimes(1);
 
-    // 404 con el payload que define el handler
     expect(_404_NOT_FOUND_).toHaveBeenCalledWith({
       message: 'Order not in CREATED status, cannot confirm.',
       data: [],
     });
     expect(res).toEqual(notFoundResponse);
 
-    // Logs
     expect(logger.info).toHaveBeenCalledWith('📥 Incoming request', { event: baseEvent });
     expect(logger.debug).toHaveBeenCalledWith('✅ Validation passed', validated);
-    // El handler loguea de todas formas el resultado del adapter (aquí null)
     expect(logger.info).toHaveBeenCalledWith('✅ Get order user', null);
     expect(logger.error).not.toHaveBeenCalled();
     expect(toHttpResponse).not.toHaveBeenCalled();
@@ -162,7 +150,6 @@ describe('statusConfirmOrders.handler', () => {
     const res = await handler(baseEvent);
 
     expect(validationHttps).toHaveBeenCalledWith(baseEvent, statusConfirmOrdersSchema);
-    // No se debe invocar el adapter ni empaquetadores de éxito
     expect(confirmStatusOrdersHttpAdapter).not.toHaveBeenCalled();
     expect(_200_OK_).not.toHaveBeenCalled();
     expect(_404_NOT_FOUND_).not.toHaveBeenCalled();
@@ -170,7 +157,6 @@ describe('statusConfirmOrders.handler', () => {
     expect(toHttpResponse).toHaveBeenCalledWith(thrown);
     expect(res).toEqual(mapped);
 
-    // Logs
     expect(logger.info).toHaveBeenCalledWith('📥 Incoming request', { event: baseEvent });
     expect(logger.debug).not.toHaveBeenCalled();
     expect(logger.error).toHaveBeenCalledWith('❌ Error in get order user', { err: thrown });

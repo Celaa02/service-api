@@ -1,8 +1,8 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 
-import { handler } from '../../src/handlers/createOrders';
-import { createOrdersSchema } from '../../src/handlers/schemas/Orders/createOrdersSchemaHttp';
-import { createOrdersHttpAdapter } from '../../src/infrastructure/adapters/Orders/createOrdersAdaptersHttp';
+import { handler } from '../../src/handlers/createProducts';
+import { createProductsSchema } from '../../src/handlers/schemas/Products/createProductsSchemaHttp';
+import { createProductsHttpAdapter } from '../../src/infrastructure/adapters/Products/createProductsAdaptersHttp';
 import { _201_CREATED_ } from '../../src/utils/HttpResponse';
 import { toHttpResponse } from '../../src/utils/HttpResponseErrors';
 import { logger } from '../../src/utils/Logger';
@@ -28,27 +28,27 @@ jest.mock('../../src/utils/Logger', () => ({
   },
 }));
 
-jest.mock('../../src/infrastructure/repository/ordersRepository', () => ({
-  OrderRepositoryDynamoDB: jest.fn().mockImplementation(() => ({})),
+jest.mock('../../src/infrastructure/repository/productsRepository', () => ({
+  ProductRepositoryDynamoDB: jest.fn().mockImplementation(() => ({})),
 }));
 
-jest.mock('../../src/infrastructure/adapters/Orders/createOrdersAdaptersHttp', () => ({
-  createOrdersHttpAdapter: jest.fn(),
+jest.mock('../../src/infrastructure/adapters/Products/createProductsAdaptersHttp', () => ({
+  createProductsHttpAdapter: jest.fn(),
 }));
 
-describe('createOrder.handler', () => {
+describe('createProducts.handler', () => {
   const baseEvent: APIGatewayProxyEvent = {
-    body: '{"foo":"bar"}',
+    body: JSON.stringify({ productId: 'p-1', name: 'Teclado', price: 120, stock: 10 }),
     headers: {},
     httpMethod: 'POST',
     isBase64Encoded: false,
     multiValueHeaders: {},
     multiValueQueryStringParameters: null,
-    path: '/orders',
+    path: '/products',
     pathParameters: null,
     queryStringParameters: null,
     requestContext: {} as any,
-    resource: '/orders',
+    resource: '/products',
     stageVariables: null,
   };
 
@@ -56,48 +56,53 @@ describe('createOrder.handler', () => {
     jest.clearAllMocks();
   });
 
-  it('valida input, ejecuta adapter, retorna 201 y hace logs de éxito', async () => {
-    const validated = { userId: 'u1', items: [{ sku: 'A1', qty: 1 }] };
-    const adapterResponse = { orderId: 'abc-123', userId: 'u1' };
-    const successResponse: APIGatewayProxyResult = {
+  it('valida, ejecuta adapter y retorna 201 con logs de éxito', async () => {
+    const validated = { productId: 'p-1', name: 'Teclado', price: 120, stock: 10 };
+    const adapterResponse = {
+      productId: 'p-1',
+      name: 'Teclado',
+      price: 120,
+      stock: 10,
+      createdAt: '2025-01-01T00:00:00.000Z',
+    };
+    const okResponse: APIGatewayProxyResult = {
       statusCode: 201,
+      headers: { 'content-type': 'application/json' } as any,
       body: JSON.stringify(adapterResponse),
-      headers: { 'content-type': 'application/json' },
     };
 
     (validationHttps as jest.Mock).mockResolvedValue(validated);
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    (createOrdersHttpAdapter as jest.Mock).mockImplementation((_doCase: any) => {
+    (createProductsHttpAdapter as jest.Mock).mockImplementation((_doCase: any) => {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      return jest.fn(async (_event: APIGatewayProxyEvent, _deps: unknown) => {
-        return adapterResponse;
-      });
+      return jest.fn(async (_event: APIGatewayProxyEvent, _deps: any) => adapterResponse);
     });
 
-    (_201_CREATED_ as jest.Mock).mockReturnValue(successResponse);
+    (_201_CREATED_ as jest.Mock).mockReturnValue(okResponse);
 
     const res = await handler(baseEvent);
 
-    expect(validationHttps).toHaveBeenCalledWith(baseEvent, createOrdersSchema);
+    expect(validationHttps).toHaveBeenCalledWith(baseEvent, createProductsSchema);
 
-    expect(createOrdersHttpAdapter).toHaveBeenCalledTimes(1);
+    expect(createProductsHttpAdapter).toHaveBeenCalledTimes(1);
+
     expect(_201_CREATED_).toHaveBeenCalledWith(adapterResponse);
-    expect(res).toEqual(successResponse);
+    expect(res).toEqual(okResponse);
 
     expect(logger.info).toHaveBeenCalledWith('📥 Incoming request', { event: baseEvent });
-    expect(logger.debug).toHaveBeenNthCalledWith(1, '✅ Validation passed', validated);
-    expect(logger.debug).toHaveBeenNthCalledWith(2, '✅ Order created ', adapterResponse);
+    expect(logger.debug).toHaveBeenCalledWith('✅ Validation passed', validated);
+    expect(logger.debug).toHaveBeenCalledWith('✅ Products created ', adapterResponse);
     expect(logger.error).not.toHaveBeenCalled();
     expect(toHttpResponse).not.toHaveBeenCalled();
   });
 
-  it('mapea errores a http con toHttpResponse y los loguea', async () => {
+  it('mapea errores con toHttpResponse y loguea error', async () => {
     const thrown = new Error('validation failed');
     const mapped: APIGatewayProxyResult = {
       statusCode: 400,
-      body: JSON.stringify({ message: 'bad request' }),
       headers: { 'content-type': 'application/json' } as any,
+      body: JSON.stringify({ code: 'BAD_REQUEST', message: 'bad' }),
     };
 
     (validationHttps as jest.Mock).mockRejectedValue(thrown);
@@ -105,14 +110,16 @@ describe('createOrder.handler', () => {
 
     const res = await handler(baseEvent);
 
-    expect(validationHttps).toHaveBeenCalledWith(baseEvent, createOrdersSchema);
-    expect(createOrdersHttpAdapter).not.toHaveBeenCalled(); // no se llega al adapter
+    expect(validationHttps).toHaveBeenCalledWith(baseEvent, createProductsSchema);
+    expect(createProductsHttpAdapter).not.toHaveBeenCalled();
     expect(_201_CREATED_).not.toHaveBeenCalled();
+
     expect(toHttpResponse).toHaveBeenCalledWith(thrown);
     expect(res).toEqual(mapped);
 
+    // Logs
     expect(logger.info).toHaveBeenCalledWith('📥 Incoming request', { event: baseEvent });
     expect(logger.debug).not.toHaveBeenCalled();
-    expect(logger.error).toHaveBeenCalledWith('❌ Error in createOrder', { err: thrown });
+    expect(logger.error).toHaveBeenCalledWith('❌ Error in products create', { err: thrown });
   });
 });

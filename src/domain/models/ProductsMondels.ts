@@ -3,6 +3,7 @@ export interface productCreate {
   name: string;
   price: number;
   stock?: number;
+  status?: 'ACTIVE' | 'INACTIVE';
   createdAt: string;
 }
 
@@ -11,5 +12,6 @@ export interface productResponse {
   name: string;
   price: number;
   stock?: number;
+  status?: string;
   createdAt: string;
 }

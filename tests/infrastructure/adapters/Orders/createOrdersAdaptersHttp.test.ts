@@ -1,13 +1,12 @@
-// test/handlers/createOrdersHttpAdapter.test.ts
 import { APIGatewayProxyEvent } from 'aws-lambda';
 
-import { createOrdersDependencies } from '../../../src/domain/case/dependencies/createOrders/CreateOrdersDepencies';
-import { createOrderType } from '../../../src/domain/case/dependencies/createOrders/createOrdersType';
-import { createOrders } from '../../../src/domain/models/OrdersModelsHttp';
-import { createOrdersHttpAdapter } from '../../../src/infrastructure/adapters/createOrdersAdaptersHttp';
-import { parseBody } from '../../../src/utils/utilsResponse';
+import { createOrdersDependencies } from '../../../../src/case/useCaseCreateOrders/CreateOrdersDepencies';
+import { createOrderType } from '../../../../src/case/useCaseCreateOrders/createOrdersType';
+import { createOrders } from '../../../../src/domain/models/OrdersModels';
+import { createOrdersHttpAdapter } from '../../../../src/infrastructure/adapters/Orders/createOrdersAdaptersHttp';
+import { parseBody } from '../../../../src/utils/utilsResponse';
 
-jest.mock('../../../src/utils/utilsResponse', () => ({
+jest.mock('../../../../src/utils/utilsResponse', () => ({
   parseBody: jest.fn(),
 }));
 

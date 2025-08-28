@@ -23,6 +23,7 @@ export class ProductRepositoryDynamoDB implements ProductsRepository {
         name: input.name,
         price: input.price,
         stock: input.stock,
+        status: input.status ?? 'ACTIVE',
         createdAt: input.createdAt,
       };
     } catch (err: any) {

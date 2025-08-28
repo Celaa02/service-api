@@ -1,9 +1,8 @@
-// tests/infrastructure/adapters/confirmStatusOrdersAdaptersHttp.test.ts
 import { APIGatewayProxyEvent } from 'aws-lambda';
 
-import { statusConfirmOrdersDependencies } from '../../../src/domain/case/dependencies/statusConfirmOrders/statusConfirmOrdersDepencies';
-import { statusConfirmOrderType } from '../../../src/domain/case/dependencies/statusConfirmOrders/statusConfrimOrdersType';
-import { confirmStatusOrdersHttpAdapter } from '../../../src/infrastructure/adapters/confirmStatusOrdersAdaptersHttp';
+import { statusConfirmOrdersDependencies } from '../../../../src/case/statusConfirmOders/statusConfirmOrdersDepencies';
+import { statusConfirmOrderType } from '../../../../src/case/statusConfirmOders/statusConfrimOrdersType';
+import { confirmStatusOrdersHttpAdapter } from '../../../../src/infrastructure/adapters/Orders/confirmStatusOrdersAdaptersHttp';
 
 jest.mock('crypto', () => {
   const actual = jest.requireActual('crypto');

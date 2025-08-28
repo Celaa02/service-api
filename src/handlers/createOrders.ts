@@ -2,13 +2,13 @@ import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 
 import { createOrdersDependencies } from '../case/useCaseCreateOrders/CreateOrdersDepencies';
 import { useCaseCreateOrders } from '../case/useCaseCreateOrders/useCaseCreateOrders';
-import { OrderRepositoryDynamoDB } from '../infrastructure/repository/dynamonDBRepository';
+import { OrderRepositoryDynamoDB } from '../infrastructure/repository/ordersRepository';
 import { _201_CREATED_ } from '../utils/HttpResponse';
 import { toHttpResponse } from '../utils/HttpResponseErrors';
 import { logger } from '../utils/Logger';
 import { validationHttps } from '../utils/ValidationsHttps';
-import { createOrdersSchema } from './schemas/createOrdersSchemaHttp';
-import { createOrdersHttpAdapter } from '../infrastructure/adapters/createOrdersAdaptersHttp';
+import { createOrdersSchema } from './schemas/Orders/createOrdersSchemaHttp';
+import { createOrdersHttpAdapter } from '../infrastructure/adapters/Orders/createOrdersAdaptersHttp';
 
 const factory = (): createOrdersDependencies => ({
   repository: new OrderRepositoryDynamoDB(),

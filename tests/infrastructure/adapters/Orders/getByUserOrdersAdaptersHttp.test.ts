@@ -1,8 +1,8 @@
 import { APIGatewayProxyEvent } from 'aws-lambda';
 
-import { getByUserOrdersDependencies } from '../../../src/domain/case/dependencies/getByUserOrders/getByUserOrdersDepencies';
-import { getByUsrOrderType } from '../../../src/domain/case/dependencies/getByUserOrders/getByUserOrdersType';
-import { getByUserOrdersHttpAdapter } from '../../../src/infrastructure/adapters/getByUserOrdersAdaptersHttp';
+import { getByUserOrdersDependencies } from '../../../../src/case/useCaseGetByUserOders/getByUserOrdersDepencies';
+import { getByUsrOrderType } from '../../../../src/case/useCaseGetByUserOders/getByUserOrdersType';
+import { getByUserOrdersHttpAdapter } from '../../../../src/infrastructure/adapters/Orders/getByUserOrdersAdaptersHttp';
 
 describe('getByUserOrdersHttpAdapter', () => {
   const makeEvent = (userId?: string, limit?: string): APIGatewayProxyEvent =>

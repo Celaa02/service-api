@@ -1,8 +1,8 @@
 import { APIGatewayProxyEvent } from 'aws-lambda';
 import { randomUUID } from 'crypto';
 
-import { statusConfirmOrdersDependencies } from '../../case/statusConfirmOders/statusConfirmOrdersDepencies';
-import { statusConfirmOrderType } from '../../case/statusConfirmOders/statusConfrimOrdersType';
+import { statusConfirmOrdersDependencies } from '../../../case/statusConfirmOders/statusConfirmOrdersDepencies';
+import { statusConfirmOrderType } from '../../../case/statusConfirmOders/statusConfrimOrdersType';
 
 export const confirmStatusOrdersHttpAdapter =
   (doCase: statusConfirmOrderType) =>

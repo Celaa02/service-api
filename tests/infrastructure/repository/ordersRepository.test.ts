@@ -1,6 +1,6 @@
-import { itemCreateOrder, orderByUser } from '../../../src/domain/models/OrdersModelsHttp';
+import { itemCreateOrder, orderByUser } from '../../../src/domain/models/OrdersModels';
 import { ddbDoc } from '../../../src/infrastructure/database/DynamonDB';
-import { OrderRepositoryDynamoDB } from '../../../src/infrastructure/repository/dynamonDBRepository';
+import { OrderRepositoryDynamoDB } from '../../../src/infrastructure/repository/ordersRepository';
 import { mapDynamoError } from '../../../src/utils/mapDynamonError';
 
 jest.mock('../../../src/infrastructure/database/DynamonDB', () => ({
@@ -100,7 +100,6 @@ describe('OrderRepositoryDynamoDB', () => {
 
       const res = await repo.getOrderById('abc');
 
-      // Validar que pidió por la PK correcta
       const sentCmd = (ddbDoc.send as jest.Mock).mock.calls[0][0] as { input: any };
       expect(sentCmd.input.TableName).toBe('aws-crud-api-dev-orders');
       expect(sentCmd.input.Key).toEqual({ orderId: 'abc' });
@@ -179,7 +178,7 @@ describe('OrderRepositoryDynamoDB', () => {
       (ddbDoc.send as jest.Mock).mockResolvedValue({
         Items: [
           { orderId: 'o1', total: 50, createdAt: '2025-01-01', status: 'CONFIRMED' },
-          { orderId: 'o2', createdAt: '2025-01-02' }, // sin total ni status
+          { orderId: 'o2', createdAt: '2025-01-02' },
         ],
       });
 
@@ -248,7 +247,6 @@ describe('OrderRepositoryDynamoDB', () => {
     it('actualiza la orden (CREATED -> CONFIRMED) y retorna el objeto mapeado con paymentId', async () => {
       const repo = new OrderRepositoryDynamoDB();
 
-      // Simula respuesta de Dynamo con Attributes "nuevas"
       (ddbDoc.send as jest.Mock).mockResolvedValue({
         Attributes: {
           orderId: 'ord-1',
@@ -296,7 +294,6 @@ describe('OrderRepositoryDynamoDB', () => {
         paymentId: 'pay-123',
       });
 
-      // No debe mapear error
       expect(mapDynamoError).not.toHaveBeenCalled();
     });
 
@@ -311,10 +308,8 @@ describe('OrderRepositoryDynamoDB', () => {
 
       const res = await repo.confirmOrder(input as any);
 
-      // Se intentó enviar la actualización
       expect(ddbDoc.send).toHaveBeenCalledTimes(1);
 
-      // Al ser condición fallida, retorna null y no llama al mapper
       expect(res).toBeNull();
       expect(mapDynamoError).not.toHaveBeenCalled();
     });

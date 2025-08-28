@@ -1,12 +1,12 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 
-import { getByIdOrdersHttpAdapter } from '../infrastructure/adapters/getByIdOrdersAdaptersHttp';
-import { OrderRepositoryDynamoDB } from '../infrastructure/repository/dynamonDBRepository';
+import { getByIdOrdersHttpAdapter } from '../infrastructure/adapters/Orders/getByIdOrdersAdaptersHttp';
+import { OrderRepositoryDynamoDB } from '../infrastructure/repository/ordersRepository';
 import { _200_OK_, _404_NOT_FOUND_ } from '../utils/HttpResponse';
 import { toHttpResponse } from '../utils/HttpResponseErrors';
 import { logger } from '../utils/Logger';
 import { validationHttps } from '../utils/ValidationsHttps';
-import { getByIdOrdersSchema } from './schemas/getByIdOrdersSchemaHttp';
+import { getByIdOrdersSchema } from './schemas/Orders/getByIdOrdersSchemaHttp';
 import { getByIdOrdersDependencies } from '../case/useCaseGetByIdOrders/getByIdOrdersDepencies';
 import { useCaseGetByIdOrders } from '../case/useCaseGetByIdOrders/useCaseGetByIdOrders';
 
