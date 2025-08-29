@@ -6,7 +6,7 @@ import { _200_OK_ } from '../utils/HttpResponse';
 import { toHttpResponse } from '../utils/HttpResponseErrors';
 import { logger } from '../utils/Logger';
 import { validationHttps } from '../utils/ValidationsHttps';
-import { getByUserOrdersSchema } from './schemas/Orders/getByUserOrdersSchemaHttp';
+import { pathSchema, querySchema } from './schemas/Orders/getByUserOrdersSchemaHttp';
 import { getByUserOrdersDependencies } from '../case/useCaseGetByUserOders/getByUserOrdersDepencies';
 import { useCaseGetByUserOrders } from '../case/useCaseGetByUserOders/useCaseGetByUserOders';
 
@@ -20,7 +20,7 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
   dependencies.logger.info('📥 Incoming request', { event });
 
   try {
-    const validated = await validationHttps(event, getByUserOrdersSchema);
+    const validated = await validationHttps(event, { pathSchema, querySchema });
     logger.debug('✅ Validation passed', validated);
     const adapter = getByUserOrdersHttpAdapter(useCaseGetByUserOrders());
 

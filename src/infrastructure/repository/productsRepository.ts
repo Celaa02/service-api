@@ -1,6 +1,10 @@
-import { GetCommand, PutCommand, ScanCommand } from '@aws-sdk/lib-dynamodb';
+import { GetCommand, PutCommand, ScanCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
 
-import { productCreate, productResponse } from '../../domain/models/ProductsMondels';
+import {
+  productCreate,
+  productResponse,
+  UpdateProductInput,
+} from '../../domain/models/ProductsMondels';
 import { ProductsRepository } from '../../domain/repository/productsRepository';
 import { mapDynamoError } from '../../utils/mapDynamonError';
 import { ddbDoc } from '../database/DynamonDB';
@@ -66,6 +70,42 @@ export class ProductRepositoryDynamoDB implements ProductsRepository {
         }),
       );
       return (res.Items as productResponse[]) ?? [];
+    } catch (err: any) {
+      throw mapDynamoError(err);
+    }
+  }
+
+  async updateProduct(input: UpdateProductInput): Promise<productCreate> {
+    const { productId, ...patch } = input;
+    if (!productId) throw new Error('productId requerido');
+
+    const sets: string[] = [];
+    const values: Record<string, any> = {};
+    for (const [k, v] of Object.entries(patch)) {
+      if (v === undefined) continue;
+      sets.push(`#${k} = :${k}`);
+      values[`:${k}`] = v;
+    }
+    if (sets.length === 0) throw new Error('Nada para actualizar');
+
+    const names = Object.keys(patch).reduce<Record<string, string>>((acc, k) => {
+      acc[`#${k}`] = k;
+      return acc;
+    }, {});
+
+    try {
+      const res = await ddbDoc.send(
+        new UpdateCommand({
+          TableName: PRODUCTS_TABLE,
+          Key: { productId },
+          UpdateExpression: `SET ${sets.join(', ')}`,
+          ExpressionAttributeNames: names,
+          ExpressionAttributeValues: values,
+          ConditionExpression: 'attribute_exists(productId)',
+          ReturnValues: 'ALL_NEW',
+        }),
+      );
+      return res.Attributes as productCreate;
     } catch (err: any) {
       throw mapDynamoError(err);
     }

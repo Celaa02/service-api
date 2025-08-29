@@ -3,34 +3,44 @@ import Joi from 'joi';
 
 import { AppError } from './HttpResponseErrors';
 
-export const validationHttps = async (event: APIGatewayProxyEvent, schema: Joi.ObjectSchema) => {
-  const { body, pathParameters, queryStringParameters } = event ?? {};
-
+export const validationHttps = (
+  event: APIGatewayProxyEvent,
+  schema: {
+    bodySchema?: Joi.ObjectSchema;
+    querySchema?: Joi.ObjectSchema;
+    pathSchema?: Joi.ObjectSchema;
+  },
+) => {
   let data: any;
-
-  if (typeof body === 'string' && body.trim() !== '') {
+  if (schema.bodySchema) {
     try {
-      data = JSON.parse(body);
+      data = JSON.parse(event.body || '{}');
     } catch {
       throw AppError.badRequest('Invalid JSON body');
     }
-  } else if (pathParameters && Object.keys(pathParameters).length > 0) {
-    data = pathParameters;
-  } else if (queryStringParameters && Object.keys(queryStringParameters).length > 0) {
-    data = queryStringParameters;
-  } else {
-    throw AppError.invalidInput('Invalid input');
+    const { error, value } = schema.bodySchema.validate(data, {
+      abortEarly: false,
+      allowUnknown: false,
+      stripUnknown: true,
+    });
+    if (error) {
+      throw AppError.invalidInput('Validation error', error.details);
+    }
+    return value;
   }
-
-  const { value, error } = schema.validate(data, {
-    abortEarly: false,
-    allowUnknown: false,
-    stripUnknown: true,
-  });
-
-  if (error) {
-    throw AppError.invalidInput('Validation error', error.details);
+  if (schema.querySchema) {
+    const { error, value } = schema.querySchema.validate(event.queryStringParameters || {});
+    if (error) {
+      throw AppError.invalidInput('Invalid query params', error.details);
+    }
+    return value;
   }
-
-  return value;
+  if (schema.pathSchema) {
+    const { error, value } = schema.pathSchema.validate(event.pathParameters || {});
+    if (error) {
+      throw AppError.invalidInput('Invalid path params', error.details);
+    }
+    return value;
+  }
+  throw AppError.invalidInput('No schema provided');
 };

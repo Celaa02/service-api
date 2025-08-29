@@ -1,7 +1,7 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 
 import { handler } from '../../src/handlers/createProducts';
-import { createProductsSchema } from '../../src/handlers/schemas/Products/createProductsSchemaHttp';
+import { bodySchema } from '../../src/handlers/schemas/Products/createProductsSchemaHttp';
 import { createProductsHttpAdapter } from '../../src/infrastructure/adapters/Products/createProductsAdaptersHttp';
 import { _201_CREATED_ } from '../../src/utils/HttpResponse';
 import { toHttpResponse } from '../../src/utils/HttpResponseErrors';
@@ -83,7 +83,7 @@ describe('createProducts.handler', () => {
 
     const res = await handler(baseEvent);
 
-    expect(validationHttps).toHaveBeenCalledWith(baseEvent, createProductsSchema);
+    expect(validationHttps).toHaveBeenCalledWith(baseEvent, { bodySchema });
 
     expect(createProductsHttpAdapter).toHaveBeenCalledTimes(1);
 
@@ -110,7 +110,7 @@ describe('createProducts.handler', () => {
 
     const res = await handler(baseEvent);
 
-    expect(validationHttps).toHaveBeenCalledWith(baseEvent, createProductsSchema);
+    expect(validationHttps).toHaveBeenCalledWith(baseEvent, { bodySchema });
     expect(createProductsHttpAdapter).not.toHaveBeenCalled();
     expect(_201_CREATED_).not.toHaveBeenCalled();
 

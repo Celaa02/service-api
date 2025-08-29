@@ -1,7 +1,7 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 
 import { handler } from '../../src/handlers/getOrdersById';
-import { getByIdOrdersSchema } from '../../src/handlers/schemas/Orders/getByIdOrdersSchemaHttp';
+import { pathSchema } from '../../src/handlers/schemas/Orders/getByIdOrdersSchemaHttp';
 import { getByIdOrdersHttpAdapter } from '../../src/infrastructure/adapters/Orders/getByIdOrdersAdaptersHttp';
 import { _200_OK_, _404_NOT_FOUND_ } from '../../src/utils/HttpResponse';
 import { toHttpResponse } from '../../src/utils/HttpResponseErrors';
@@ -86,7 +86,7 @@ describe('getByIdOrders.handler', () => {
 
     const res = await handler(baseEvent);
 
-    expect(validationHttps).toHaveBeenCalledWith(baseEvent, getByIdOrdersSchema);
+    expect(validationHttps).toHaveBeenCalledWith(baseEvent, { pathSchema });
 
     expect(getByIdOrdersHttpAdapter).toHaveBeenCalledTimes(1);
 
@@ -120,7 +120,7 @@ describe('getByIdOrders.handler', () => {
 
     const res = await handler(baseEvent);
 
-    expect(validationHttps).toHaveBeenCalledWith(baseEvent, getByIdOrdersSchema);
+    expect(validationHttps).toHaveBeenCalledWith(baseEvent, { pathSchema });
     expect(getByIdOrdersHttpAdapter).toHaveBeenCalledTimes(1);
 
     expect(_404_NOT_FOUND_).toHaveBeenCalledWith({
@@ -149,7 +149,7 @@ describe('getByIdOrders.handler', () => {
 
     const res = await handler(baseEvent);
 
-    expect(validationHttps).toHaveBeenCalledWith(baseEvent, getByIdOrdersSchema);
+    expect(validationHttps).toHaveBeenCalledWith(baseEvent, { pathSchema });
     expect(getByIdOrdersHttpAdapter).not.toHaveBeenCalled();
     expect(_200_OK_).not.toHaveBeenCalled();
     expect(_404_NOT_FOUND_).not.toHaveBeenCalled();

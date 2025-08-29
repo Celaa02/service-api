@@ -113,6 +113,12 @@ functions:
       - httpApi:
           method: GET
           path: /products/{productId}
+  gupdateByIdProduct:
+    handler: src/handlers/updateByIdProducts.handler
+    events:
+      - httpApi:
+          method: PUT
+          path: /products/{productId}
 
 resources:
   Resources:

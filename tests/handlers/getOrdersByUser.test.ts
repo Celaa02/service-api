@@ -1,7 +1,10 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 
 import { handler } from '../../src/handlers/getOrdersByUser';
-import { getByUserOrdersSchema } from '../../src/handlers/schemas/Orders/getByUserOrdersSchemaHttp';
+import {
+  pathSchema,
+  querySchema,
+} from '../../src/handlers/schemas/Orders/getByUserOrdersSchemaHttp';
 import { getByUserOrdersHttpAdapter } from '../../src/infrastructure/adapters/Orders/getByUserOrdersAdaptersHttp';
 import { _200_OK_ } from '../../src/utils/HttpResponse';
 import { toHttpResponse } from '../../src/utils/HttpResponseErrors';
@@ -80,7 +83,7 @@ describe('getByUserOrders.handler', () => {
 
     const res = await handler(baseEvent);
 
-    expect(validationHttps).toHaveBeenCalledWith(baseEvent, getByUserOrdersSchema);
+    expect(validationHttps).toHaveBeenCalledWith(baseEvent, { pathSchema, querySchema });
 
     expect(getByUserOrdersHttpAdapter).toHaveBeenCalledTimes(1);
 
@@ -107,7 +110,7 @@ describe('getByUserOrders.handler', () => {
 
     const res = await handler(baseEvent);
 
-    expect(validationHttps).toHaveBeenCalledWith(baseEvent, getByUserOrdersSchema);
+    expect(validationHttps).toHaveBeenCalledWith(baseEvent, { pathSchema, querySchema });
     expect(getByUserOrdersHttpAdapter).not.toHaveBeenCalled();
     expect(_200_OK_).not.toHaveBeenCalled();
 

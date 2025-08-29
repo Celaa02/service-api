@@ -1,7 +1,7 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 
 import { handler } from '../../src/handlers/getProductsById';
-import { getByIdProductsSchema } from '../../src/handlers/schemas/Products/getByIdProductsSchemaHttp';
+import { pathSchema } from '../../src/handlers/schemas/Products/getByIdProductsSchemaHttp';
 import { getByIdProductsHttpAdapter } from '../../src/infrastructure/adapters/Products/getByIdProductsAdaptersHttp';
 import { _200_OK_, _404_NOT_FOUND_ } from '../../src/utils/HttpResponse';
 import { toHttpResponse } from '../../src/utils/HttpResponseErrors';
@@ -87,11 +87,9 @@ describe('getByIdProducts.handler', () => {
 
     const res = await handler(baseEvent);
 
-    // Validación con el schema correcto
-    expect(validationHttps).toHaveBeenCalledWith(baseEvent, getByIdProductsSchema);
+    expect(validationHttps).toHaveBeenCalledWith(baseEvent, { pathSchema });
     expect(getByIdProductsHttpAdapter).toHaveBeenCalledTimes(1);
 
-    // Retorno 200
     expect(_200_OK_).toHaveBeenCalledWith(adapterResponse);
     expect(res).toEqual(okResponse);
 
@@ -122,7 +120,7 @@ describe('getByIdProducts.handler', () => {
 
     const res = await handler(baseEvent);
 
-    expect(validationHttps).toHaveBeenCalledWith(baseEvent, getByIdProductsSchema);
+    expect(validationHttps).toHaveBeenCalledWith(baseEvent, { pathSchema });
     expect(getByIdProductsHttpAdapter).toHaveBeenCalledTimes(1);
 
     expect(_404_NOT_FOUND_).toHaveBeenCalledWith({
@@ -151,7 +149,7 @@ describe('getByIdProducts.handler', () => {
 
     const res = await handler(baseEvent);
 
-    expect(validationHttps).toHaveBeenCalledWith(baseEvent, getByIdProductsSchema);
+    expect(validationHttps).toHaveBeenCalledWith(baseEvent, { pathSchema });
     expect(getByIdProductsHttpAdapter).not.toHaveBeenCalled();
     expect(_200_OK_).not.toHaveBeenCalled();
     expect(_404_NOT_FOUND_).not.toHaveBeenCalled();
@@ -159,7 +157,6 @@ describe('getByIdProducts.handler', () => {
     expect(toHttpResponse).toHaveBeenCalledWith(thrown);
     expect(res).toEqual(mapped);
 
-    // Debió loguear el incoming request y el error
     expect(logger.info).toHaveBeenCalledWith('📥 Incoming request', { event: baseEvent });
     expect(logger.debug).not.toHaveBeenCalled();
     expect(logger.error).toHaveBeenCalledWith('❌ Error in get products', { err: thrown });

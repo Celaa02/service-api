@@ -1,6 +1,6 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 
-import { statusConfirmOrdersSchema } from '../../src/handlers/schemas/Orders/statusConfirmOrdersSchemaHttp';
+import { pathSchema } from '../../src/handlers/schemas/Orders/statusConfirmOrdersSchemaHttp';
 import { handler } from '../../src/handlers/statusOrdersConfirm';
 import { confirmStatusOrdersHttpAdapter } from '../../src/infrastructure/adapters/Orders/confirmStatusOrdersAdaptersHttp';
 import { _200_OK_, _404_NOT_FOUND_ } from '../../src/utils/HttpResponse';
@@ -86,7 +86,7 @@ describe('statusConfirmOrders.handler', () => {
 
     const res = await handler(baseEvent);
 
-    expect(validationHttps).toHaveBeenCalledWith(baseEvent, statusConfirmOrdersSchema);
+    expect(validationHttps).toHaveBeenCalledWith(baseEvent, { pathSchema });
 
     expect(confirmStatusOrdersHttpAdapter).toHaveBeenCalledTimes(1);
 
@@ -120,7 +120,7 @@ describe('statusConfirmOrders.handler', () => {
 
     const res = await handler(baseEvent);
 
-    expect(validationHttps).toHaveBeenCalledWith(baseEvent, statusConfirmOrdersSchema);
+    expect(validationHttps).toHaveBeenCalledWith(baseEvent, { pathSchema });
     expect(confirmStatusOrdersHttpAdapter).toHaveBeenCalledTimes(1);
 
     expect(_404_NOT_FOUND_).toHaveBeenCalledWith({
@@ -149,7 +149,7 @@ describe('statusConfirmOrders.handler', () => {
 
     const res = await handler(baseEvent);
 
-    expect(validationHttps).toHaveBeenCalledWith(baseEvent, statusConfirmOrdersSchema);
+    expect(validationHttps).toHaveBeenCalledWith(baseEvent, { pathSchema });
     expect(confirmStatusOrdersHttpAdapter).not.toHaveBeenCalled();
     expect(_200_OK_).not.toHaveBeenCalled();
     expect(_404_NOT_FOUND_).not.toHaveBeenCalled();

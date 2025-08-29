@@ -1,5 +1,5 @@
 import Joi from 'joi';
 
-export const statusConfirmOrdersSchema = Joi.object({
+export const pathSchema = Joi.object({
   orderId: Joi.string().required(),
 });

@@ -420,3 +420,171 @@ describe('ProductRepositoryDynamoDB.listAll', () => {
     expect(mapDynamoErrorMock).toHaveBeenCalledWith(rawError);
   });
 });
+
+describe('ProductRepositoryDynamoDB.updateProduct', () => {
+  const ORIGINAL_ENV = { ...process.env };
+
+  beforeEach(() => {
+    jest.resetModules();
+    jest.clearAllMocks();
+    process.env = { ...ORIGINAL_ENV, PRODUCTS_TABLE_NAME: 'aws-crud-api-dev-products' };
+  });
+
+  afterEach(() => {
+    process.env = ORIGINAL_ENV;
+  });
+
+  it('construye UpdateCommand con SET/Names/Values y retorna Attributes', async () => {
+    const sendMock = jest.fn().mockResolvedValue({
+      Attributes: {
+        productId: 'prod-1',
+        name: 'Teclado',
+        price: 150,
+        stock: 20,
+        status: 'ACTIVE',
+        createdAt: '2025-01-01T00:00:00.000Z',
+      },
+    });
+    const updateCommandMock = jest.fn().mockImplementation((input) => ({ input }));
+    const mapDynamoErrorMock = jest.fn();
+
+    jest.doMock('../../../src/infrastructure/database/DynamonDB', () => ({
+      ddbDoc: { send: sendMock },
+    }));
+    jest.doMock('@aws-sdk/lib-dynamodb', () => ({
+      UpdateCommand: updateCommandMock,
+      PutCommand: jest.fn().mockImplementation((input) => ({ input })),
+      GetCommand: jest.fn().mockImplementation((input) => ({ input })),
+      ScanCommand: jest.fn().mockImplementation((input) => ({ input })),
+      QueryCommand: jest.fn().mockImplementation((input) => ({ input })),
+    }));
+    jest.doMock('../../../src/utils/mapDynamonError', () => ({
+      mapDynamoError: mapDynamoErrorMock,
+    }));
+
+    const { ProductRepositoryDynamoDB } = await import(
+      '../../../src/infrastructure/repository/productsRepository'
+    );
+    const repo = new ProductRepositoryDynamoDB();
+
+    const input = {
+      productId: 'prod-1',
+      name: 'Teclado',
+      price: 150,
+      stock: 20,
+      status: 'ACTIVE',
+      description: undefined,
+    } as any;
+
+    const out = await repo.updateProduct(input);
+
+    expect(sendMock).toHaveBeenCalledTimes(1);
+
+    const sentCmd = sendMock.mock.calls[0][0] as { input: any };
+    expect(updateCommandMock).toHaveBeenCalledTimes(1);
+
+    expect(sentCmd.input.TableName).toBe('aws-crud-api-dev-products');
+    expect(sentCmd.input.Key).toEqual({ productId: 'prod-1' });
+
+    expect(sentCmd.input.UpdateExpression).toBe(
+      'SET #name = :name, #price = :price, #stock = :stock, #status = :status',
+    );
+
+    expect(sentCmd.input.ExpressionAttributeNames).toEqual({
+      '#description': 'description',
+      '#name': 'name',
+      '#price': 'price',
+      '#stock': 'stock',
+      '#status': 'status',
+    });
+
+    expect(sentCmd.input.ExpressionAttributeValues).toEqual({
+      ':name': 'Teclado',
+      ':price': 150,
+      ':stock': 20,
+      ':status': 'ACTIVE',
+    });
+
+    expect(sentCmd.input.ConditionExpression).toBe('attribute_exists(productId)');
+    expect(sentCmd.input.ReturnValues).toBe('ALL_NEW');
+
+    expect(out).toEqual({
+      productId: 'prod-1',
+      name: 'Teclado',
+      price: 150,
+      stock: 20,
+      status: 'ACTIVE',
+      createdAt: '2025-01-01T00:00:00.000Z',
+    });
+
+    expect(mapDynamoErrorMock).not.toHaveBeenCalled();
+  });
+
+  it('lanza error si falta productId', async () => {
+    const { ProductRepositoryDynamoDB } = await import(
+      '../../../src/infrastructure/repository/productsRepository'
+    );
+    const repo = new ProductRepositoryDynamoDB();
+
+    await expect(repo.updateProduct({ name: 'X' } as any)).rejects.toThrow('productId requerido');
+  });
+
+  it('lanza error si no hay campos para actualizar (todo undefined)', async () => {
+    const { ProductRepositoryDynamoDB } = await import(
+      '../../../src/infrastructure/repository/productsRepository'
+    );
+    const repo = new ProductRepositoryDynamoDB();
+
+    await expect(repo.updateProduct({ productId: 'prod-1' } as any)).rejects.toThrow(
+      'Nada para actualizar',
+    );
+  });
+
+  it('mapea error cuando ddbDoc.send rechaza', async () => {
+    const rawError = new Error('update failed');
+    const sendMock = jest.fn().mockRejectedValue(rawError);
+    const updateCommandMock = jest.fn().mockImplementation((input) => ({ input }));
+    const mapped = new Error('mapped-error');
+    const mapDynamoErrorMock = jest.fn().mockReturnValue(mapped);
+
+    jest.doMock('../../../src/infrastructure/database/DynamonDB', () => ({
+      ddbDoc: { send: sendMock },
+    }));
+    jest.doMock('@aws-sdk/lib-dynamodb', () => ({
+      UpdateCommand: updateCommandMock,
+    }));
+    jest.doMock('../../../src/utils/mapDynamonError', () => ({
+      mapDynamoError: mapDynamoErrorMock,
+    }));
+
+    const { ProductRepositoryDynamoDB } = await import(
+      '../../../src/infrastructure/repository/productsRepository'
+    );
+    const repo = new ProductRepositoryDynamoDB();
+
+    const input = {
+      productId: 'prod-2',
+      price: 200,
+      stock: 3,
+    } as any;
+
+    await expect(repo.updateProduct(input)).rejects.toBe(mapped);
+
+    expect(sendMock).toHaveBeenCalledTimes(1);
+    const sent = sendMock.mock.calls[0][0] as { input: any };
+
+    expect(sent.input.TableName).toBe('aws-crud-api-dev-products');
+    expect(sent.input.Key).toEqual({ productId: 'prod-2' });
+    expect(sent.input.UpdateExpression).toBe('SET #price = :price, #stock = :stock');
+    expect(sent.input.ExpressionAttributeNames).toEqual({
+      '#price': 'price',
+      '#stock': 'stock',
+    });
+    expect(sent.input.ExpressionAttributeValues).toEqual({
+      ':price': 200,
+      ':stock': 3,
+    });
+
+    expect(mapDynamoErrorMock).toHaveBeenCalledWith(rawError);
+  });
+});

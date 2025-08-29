@@ -1,7 +1,7 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 
 import { handler } from '../../src/handlers/createOrders';
-import { createOrdersSchema } from '../../src/handlers/schemas/Orders/createOrdersSchemaHttp';
+import { bodySchema } from '../../src/handlers/schemas/Orders/createOrdersSchemaHttp';
 import { createOrdersHttpAdapter } from '../../src/infrastructure/adapters/Orders/createOrdersAdaptersHttp';
 import { _201_CREATED_ } from '../../src/utils/HttpResponse';
 import { toHttpResponse } from '../../src/utils/HttpResponseErrors';
@@ -79,7 +79,7 @@ describe('createOrder.handler', () => {
 
     const res = await handler(baseEvent);
 
-    expect(validationHttps).toHaveBeenCalledWith(baseEvent, createOrdersSchema);
+    expect(validationHttps).toHaveBeenCalledWith(baseEvent, { bodySchema });
 
     expect(createOrdersHttpAdapter).toHaveBeenCalledTimes(1);
     expect(_201_CREATED_).toHaveBeenCalledWith(adapterResponse);
@@ -105,7 +105,7 @@ describe('createOrder.handler', () => {
 
     const res = await handler(baseEvent);
 
-    expect(validationHttps).toHaveBeenCalledWith(baseEvent, createOrdersSchema);
+    expect(validationHttps).toHaveBeenCalledWith(baseEvent, { bodySchema });
     expect(createOrdersHttpAdapter).not.toHaveBeenCalled(); // no se llega al adapter
     expect(_201_CREATED_).not.toHaveBeenCalled();
     expect(toHttpResponse).toHaveBeenCalledWith(thrown);

@@ -1,6 +1,6 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 
-import { createProductsDependencies } from '../case/useCaseCreateProducts/CreateProductsDepencies';
+import { listProductsDependencies } from '../case/useCaseListProducts/listProductsDepencies';
 import { useCaseListProducts } from '../case/useCaseListProducts/useCaseListProducts';
 import { listProductsHttpAdapter } from '../infrastructure/adapters/Products/listProductsAdaptersHttp';
 import { ProductRepositoryDynamoDB } from '../infrastructure/repository/productsRepository';
@@ -8,7 +8,7 @@ import { _200_OK_ } from '../utils/HttpResponse';
 import { toHttpResponse } from '../utils/HttpResponseErrors';
 import { logger } from '../utils/Logger';
 
-const factory = (): createProductsDependencies => ({
+const factory = (): listProductsDependencies => ({
   repository: new ProductRepositoryDynamoDB(),
   logger,
 });

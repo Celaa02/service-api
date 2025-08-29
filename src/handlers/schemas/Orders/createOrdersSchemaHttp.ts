@@ -1,6 +1,6 @@
 import Joi from 'joi';
 
-export const createOrdersSchema = Joi.object({
+export const bodySchema = Joi.object({
   userId: Joi.string().required(),
   items: Joi.array()
     .items(

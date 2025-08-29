@@ -7,7 +7,7 @@ import { _201_CREATED_ } from '../utils/HttpResponse';
 import { toHttpResponse } from '../utils/HttpResponseErrors';
 import { logger } from '../utils/Logger';
 import { validationHttps } from '../utils/ValidationsHttps';
-import { createProductsSchema } from './schemas/Products/createProductsSchemaHttp';
+import { bodySchema } from './schemas/Products/createProductsSchemaHttp';
 import { createProductsHttpAdapter } from '../infrastructure/adapters/Products/createProductsAdaptersHttp';
 
 const factory = (): createProductsDependencies => ({
@@ -20,7 +20,7 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
   dependencies.logger.info('📥 Incoming request', { event });
 
   try {
-    const validated = await validationHttps(event, createProductsSchema);
+    const validated = await validationHttps(event, { bodySchema });
     logger.debug('✅ Validation passed', validated);
     const adapter = createProductsHttpAdapter(useCaseCreateProducts());
 

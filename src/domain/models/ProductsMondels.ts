@@ -15,3 +15,5 @@ export interface productResponse {
   status?: string;
   createdAt: string;
 }
+
+export type UpdateProductInput = Partial<Omit<productCreate, 'productId'>> & { productId: string };

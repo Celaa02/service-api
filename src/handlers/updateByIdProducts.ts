@@ -1,17 +1,17 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 
-import { statusConfirmOders } from '../case/statusConfirmOders/statusConfirmOders';
-import { confirmStatusOrdersHttpAdapter } from '../infrastructure/adapters/Orders/confirmStatusOrdersAdaptersHttp';
-import { OrderRepositoryDynamoDB } from '../infrastructure/repository/ordersRepository';
+import { updateByIdProductsDependencies } from '../case/useCaseUpdateByIdProducts/updateByIdProductsDepencies';
+import { useCaseUpdateByIdProducts } from '../case/useCaseUpdateByIdProducts/useCaseUpdateByIdProduct';
+import { updateByIdProductsHttpAdapter } from '../infrastructure/adapters/Products/updateByIdProductsAdaptersHttp';
+import { ProductRepositoryDynamoDB } from '../infrastructure/repository/productsRepository';
 import { _200_OK_, _404_NOT_FOUND_ } from '../utils/HttpResponse';
 import { toHttpResponse } from '../utils/HttpResponseErrors';
 import { logger } from '../utils/Logger';
 import { validationHttps } from '../utils/ValidationsHttps';
-import { pathSchema } from './schemas/Orders/statusConfirmOrdersSchemaHttp';
-import { statusConfirmOrdersDependencies } from '../case/statusConfirmOders/statusConfirmOrdersDepencies';
+import { pathSchema } from './schemas/Products/updateByIdProductsSchemaHttp';
 
-const factory = (): statusConfirmOrdersDependencies => ({
-  repository: new OrderRepositoryDynamoDB(),
+const factory = (): updateByIdProductsDependencies => ({
+  repository: new ProductRepositoryDynamoDB(),
   logger,
 });
 
@@ -22,21 +22,21 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
   try {
     const validated = await validationHttps(event, { pathSchema });
     logger.debug('✅ Validation passed', validated);
-    const adapter = confirmStatusOrdersHttpAdapter(statusConfirmOders());
+    const adapter = updateByIdProductsHttpAdapter(useCaseUpdateByIdProducts());
 
     const response = await adapter(event, dependencies);
-    logger.info('✅ Get order user', response);
+    logger.info('✅ Update product id', response);
 
     if (response === null) {
       return _404_NOT_FOUND_({
-        message: 'Order not in CREATED status, cannot confirm.',
+        message: 'Product not in CREATED.',
         data: [],
       });
     }
 
     return _200_OK_(response);
   } catch (err) {
-    logger.error('❌ Error in get order user', { err });
+    logger.error('❌ Error in update product id', { err });
     return toHttpResponse(err);
   }
 };
