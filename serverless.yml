@@ -1,27 +1,47 @@
 service: aws-crud-api
-frameworkVersion: "3"
+frameworkVersion: '3'
 
 useDotenv: true
 
 provider:
   name: aws
   runtime: nodejs18.x
-  region: ${opt:region, 'us-east-1'}
   stage: ${opt:stage, 'dev'}
   environment:
     STAGE: ${sls:stage}
-    TABLE_NAME: ${param:tableName}
+    PRODUCTS_TABLE_NAME: ${param:productsTableName}
+    ORDERS_TABLE_NAME: ${param:ordersTableName}
     LOG_LEVEL: ${param:logLevel}
+    IS_OFFLINE: ${env:IS_OFFLINE, 'false'}
+
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:DescribeTable
+        - dynamodb:PutItem
+        - dynamodb:GetItem
+        - dynamodb:Query
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+        - dynamodb:BatchWriteItem
+        - dynamodb:BatchGetItem
+      Resource:
+        - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${self:provider.environment.ORDERS_TABLE_NAME}
+        - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${self:provider.environment.PRODUCTS_TABLE_NAME}
+        - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${self:provider.environment.ORDERS_TABLE_NAME}/index/*
 
 params:
   dev:
-    tableName: ${self:service}-dev-items
+    productsTableName: ${self:service}-dev-products
+    ordersTableName: ${self:service}-dev-orders
     logLevel: DEBUG
   prod:
-    tableName: ${self:service}-prod-items
+    productsTableName: ${self:service}-prod-products
+    ordersTableName: ${self:service}-prod-orders
     logLevel: INFO
 
 plugins:
+  - serverless-dynamodb-local
   - serverless-offline
   - serverless-esbuild
 
@@ -33,8 +53,112 @@ custom:
     target: node18
     platform: node
     concurrency: 10
+  dynamodb:
+    stages:
+      - dev
+    start:
+      port: 8000
+      inMemory: true # o false si quieres persistir en ./.dynamodb
+      migrate: true # <— crea tablas locales a partir de resources
+      seed: true # <— opcional: carga data semilla
+      noStart: false
+    seed:
+      dev:
+        sources:
+          - table: ${self:provider.environment.PRODUCTS_TABLE_NAME}
+            sources: [./seed/products.json]
+          - table: ${self:provider.environment.ORDERS_TABLE_NAME}
+            sources: [./seed/orders.json]
 
 functions:
-  ping:
-    handler: src/handlers/createItem.handler
-# resources: (DynamoDB/IAM luego)
+  createOrder:
+    handler: src/handlers/createOrders.handler
+    events:
+      - httpApi:
+          method: POST
+          path: /orders
+  getByIdOrder:
+    handler: src/handlers/getOrdersById.handler
+    events:
+      - httpApi:
+          method: GET
+          path: /orders/{id}
+  getByUserOrder:
+    handler: src/handlers/getOrdersByUser.handler
+    events:
+      - httpApi:
+          method: GET
+          path: /users/orders/{userId}
+  confirmOrder:
+    handler: src/handlers/statusOrdersConfirm.handler
+    events:
+      - httpApi:
+          method: PATCH
+          path: /orders/confirm/{orderId}
+  createProducts:
+    handler: src/handlers/createProducts.handler
+    events:
+      - httpApi:
+          method: POST
+          path: /products
+  listProducts:
+    handler: src/handlers/listProducts.handler
+    events:
+      - httpApi:
+          method: GET
+          path: /products
+  getByIdProduct:
+    handler: src/handlers/getProductsById.handler
+    events:
+      - httpApi:
+          method: GET
+          path: /products/{productId}
+  gupdateByIdProduct:
+    handler: src/handlers/updateByIdProducts.handler
+    events:
+      - httpApi:
+          method: PUT
+          path: /products/{productId}
+
+resources:
+  Resources:
+    ProductsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.PRODUCTS_TABLE_NAME}
+        BillingMode: PAY_PER_REQUEST
+        SSESpecification: { SSEEnabled: true }
+        PointInTimeRecoverySpecification: { PointInTimeRecoveryEnabled: true }
+        AttributeDefinitions:
+          - AttributeName: productId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: productId
+            KeyType: HASH
+
+    OrdersTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.ORDERS_TABLE_NAME}
+        BillingMode: PAY_PER_REQUEST
+        SSESpecification: { SSEEnabled: true }
+        PointInTimeRecoverySpecification: { PointInTimeRecoveryEnabled: true }
+        AttributeDefinitions:
+          - AttributeName: orderId
+            AttributeType: S
+          - AttributeName: userId
+            AttributeType: S
+          - AttributeName: createdAt
+            AttributeType: S
+        KeySchema:
+          - AttributeName: orderId
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: UserOrdersIndex
+            KeySchema:
+              - AttributeName: userId
+                KeyType: HASH
+              - AttributeName: createdAt
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
