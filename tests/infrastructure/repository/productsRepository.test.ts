@@ -588,3 +588,90 @@ describe('ProductRepositoryDynamoDB.updateProduct', () => {
     expect(mapDynamoErrorMock).toHaveBeenCalledWith(rawError);
   });
 });
+
+describe('ProductRepositoryDynamoDB.deleteProduct', () => {
+  const ORIGINAL_ENV = { ...process.env };
+
+  beforeEach(() => {
+    jest.resetModules();
+    jest.clearAllMocks();
+    process.env = { ...ORIGINAL_ENV, PRODUCTS_TABLE_NAME: 'aws-crud-api-dev-products' };
+  });
+
+  afterEach(() => {
+    process.env = ORIGINAL_ENV;
+  });
+
+  it('envía DeleteCommand con el productId y retorna { deleted }', async () => {
+    const sendMock = jest.fn().mockResolvedValue({});
+    const deleteCommandMock = jest.fn().mockImplementation((input) => ({ input }));
+    const mapDynamoErrorMock = jest.fn();
+
+    jest.doMock('../../../src/infrastructure/database/DynamonDB', () => ({
+      ddbDoc: { send: sendMock },
+    }));
+    jest.doMock('@aws-sdk/lib-dynamodb', () => ({
+      DeleteCommand: deleteCommandMock,
+      // por si el repo importa otros comandos también:
+      PutCommand: jest.fn().mockImplementation((input) => ({ input })),
+      GetCommand: jest.fn().mockImplementation((input) => ({ input })),
+      ScanCommand: jest.fn().mockImplementation((input) => ({ input })),
+      UpdateCommand: jest.fn().mockImplementation((input) => ({ input })),
+      QueryCommand: jest.fn().mockImplementation((input) => ({ input })),
+    }));
+    jest.doMock('../../../src/utils/mapDynamonError', () => ({
+      mapDynamoError: mapDynamoErrorMock,
+    }));
+
+    const { ProductRepositoryDynamoDB } = await import(
+      '../../../src/infrastructure/repository/productsRepository'
+    );
+    const repo = new ProductRepositoryDynamoDB();
+
+    const out = await repo.deleteProduct('p-123');
+
+    expect(sendMock).toHaveBeenCalledTimes(1);
+    const sent = sendMock.mock.calls[0][0] as { input: any };
+
+    expect(deleteCommandMock).toHaveBeenCalledTimes(1);
+    expect(sent.input.TableName).toBe('aws-crud-api-dev-products');
+    expect(sent.input.Key).toEqual({ productId: 'p-123' });
+    expect(sent.input.ConditionExpression).toBe('attribute_exists(productId)');
+
+    expect(out).toEqual({ deleted: 'p-123' });
+    expect(mapDynamoErrorMock).not.toHaveBeenCalled();
+  });
+
+  it('mapea y relanza el error si ddbDoc.send falla', async () => {
+    const rawError = new Error('delete failed');
+    const sendMock = jest.fn().mockRejectedValue(rawError);
+    const deleteCommandMock = jest.fn().mockImplementation((input) => ({ input }));
+    const mapped = new Error('mapped-error');
+    const mapDynamoErrorMock = jest.fn().mockReturnValue(mapped);
+
+    jest.doMock('../../../src/infrastructure/database/DynamonDB', () => ({
+      ddbDoc: { send: sendMock },
+    }));
+    jest.doMock('@aws-sdk/lib-dynamodb', () => ({
+      DeleteCommand: deleteCommandMock,
+    }));
+    jest.doMock('../../../src/utils/mapDynamonError', () => ({
+      mapDynamoError: mapDynamoErrorMock,
+    }));
+
+    const { ProductRepositoryDynamoDB } = await import(
+      '../../../src/infrastructure/repository/productsRepository'
+    );
+    const repo = new ProductRepositoryDynamoDB();
+
+    await expect(repo.deleteProduct('p-err')).rejects.toBe(mapped);
+
+    expect(sendMock).toHaveBeenCalledTimes(1);
+    const sent = sendMock.mock.calls[0][0] as { input: any };
+    expect(sent.input.TableName).toBe('aws-crud-api-dev-products');
+    expect(sent.input.Key).toEqual({ productId: 'p-err' });
+    expect(sent.input.ConditionExpression).toBe('attribute_exists(productId)');
+
+    expect(mapDynamoErrorMock).toHaveBeenCalledWith(rawError);
+  });
+});

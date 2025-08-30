@@ -1,4 +1,10 @@
-import { GetCommand, PutCommand, ScanCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
+import {
+  DeleteCommand,
+  GetCommand,
+  PutCommand,
+  ScanCommand,
+  UpdateCommand,
+} from '@aws-sdk/lib-dynamodb';
 
 import {
   productCreate,
@@ -106,6 +112,21 @@ export class ProductRepositoryDynamoDB implements ProductsRepository {
         }),
       );
       return res.Attributes as productCreate;
+    } catch (err: any) {
+      throw mapDynamoError(err);
+    }
+  }
+
+  async deleteProduct(productId: string): Promise<{ deleted: string }> {
+    try {
+      await ddbDoc.send(
+        new DeleteCommand({
+          TableName: PRODUCTS_TABLE,
+          Key: { productId },
+          ConditionExpression: 'attribute_exists(productId)',
+        }),
+      );
+      return { deleted: productId };
     } catch (err: any) {
       throw mapDynamoError(err);
     }
