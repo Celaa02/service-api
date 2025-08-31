@@ -36,14 +36,14 @@ jobs:
       - name: Final checks before deploy
         run: npx tsc --noEmit && npm test -- --coverage --maxWorkers=2
 
-      - name: Who am I?
-        run: aws sts get-caller-identity
-
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME_PROD }}
           aws-region: ${{ env.AWS_REGION }}
+
+      - name: Who am I?
+        run: aws sts get-caller-identity
 
       - name: Deploy to AWS (prod)
         run: npx serverless deploy --stage prod --region $AWS_REGION
