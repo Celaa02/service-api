@@ -35,13 +35,13 @@ jobs:
 
       - name: Validate PROD role ARN secret present
         run: |
-          if [ -z "${{ secrets.AWS_ROLE_TO_ASSUME_DEV }}" ]; then
+          if [ -z "${{ secrets.AWS_ROLE_TO_ASSUME }}" ]; then
             echo "AWS_ROLE_TO_ASSUME_PROD is empty/unavailable"; exit 1; fi
 
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME_DEV }}
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Who am I?
