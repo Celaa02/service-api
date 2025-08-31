@@ -74,55 +74,55 @@ functions:
   createOrder:
     handler: src/handlers/createOrders.handler
     events:
-      - httpApi:
+      - http:
           method: POST
           path: /orders
   getByIdOrder:
     handler: src/handlers/getOrdersById.handler
     events:
-      - httpApi:
+      - http:
           method: GET
           path: /orders/{id}
   getByUserOrder:
     handler: src/handlers/getOrdersByUser.handler
     events:
-      - httpApi:
+      - http:
           method: GET
           path: /users/orders/{userId}
   confirmOrder:
     handler: src/handlers/statusOrdersConfirm.handler
     events:
-      - httpApi:
+      - http:
           method: PATCH
           path: /orders/confirm/{orderId}
   createProducts:
     handler: src/handlers/createProducts.handler
     events:
-      - httpApi:
+      - http:
           method: POST
           path: /products
   listProducts:
     handler: src/handlers/listProducts.handler
     events:
-      - httpApi:
+      - http:
           method: GET
           path: /products
   getByIdProduct:
     handler: src/handlers/getProductsById.handler
     events:
-      - httpApi:
+      - http:
           method: GET
           path: /products/{productId}
   gupdateByIdProduct:
     handler: src/handlers/updateByIdProducts.handler
     events:
-      - httpApi:
+      - http:
           method: PUT
           path: /products/{productId}
   deleteByIdProduct:
     handler: src/handlers/deleteProductsById.handler
     events:
-      - httpApi:
+      - http:
           method: DELETE
           path: /products/{productId}
 
