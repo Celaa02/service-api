@@ -15,6 +15,26 @@
         "LOG_LEVEL": "DEBUG",
         "IS_OFFLINE": "false"
       },
+      "iamRoleStatements": [
+        {
+          "Effect": "Allow",
+          "Action": [
+            "dynamodb:DescribeTable",
+            "dynamodb:PutItem",
+            "dynamodb:GetItem",
+            "dynamodb:Query",
+            "dynamodb:UpdateItem",
+            "dynamodb:DeleteItem",
+            "dynamodb:BatchWriteItem",
+            "dynamodb:BatchGetItem"
+          ],
+          "Resource": [
+            "arn:aws:dynamodb:us-east-1:084828596902:table/aws-crud-api-dev-orders",
+            "arn:aws:dynamodb:us-east-1:084828596902:table/aws-crud-api-dev-products",
+            "arn:aws:dynamodb:us-east-1:084828596902:table/aws-crud-api-dev-orders/index/*"
+          ]
+        }
+      ],
       "region": "us-east-1",
       "versionFunctions": true,
       "compiledCloudFormationTemplate": {
@@ -96,6 +116,54 @@
               "LogGroupName": "/aws/lambda/aws-crud-api-dev-createOrder"
             }
           },
+          "GetByIdOrderLogGroup": {
+            "Type": "AWS::Logs::LogGroup",
+            "Properties": {
+              "LogGroupName": "/aws/lambda/aws-crud-api-dev-getByIdOrder"
+            }
+          },
+          "GetByUserOrderLogGroup": {
+            "Type": "AWS::Logs::LogGroup",
+            "Properties": {
+              "LogGroupName": "/aws/lambda/aws-crud-api-dev-getByUserOrder"
+            }
+          },
+          "ConfirmOrderLogGroup": {
+            "Type": "AWS::Logs::LogGroup",
+            "Properties": {
+              "LogGroupName": "/aws/lambda/aws-crud-api-dev-confirmOrder"
+            }
+          },
+          "CreateProductsLogGroup": {
+            "Type": "AWS::Logs::LogGroup",
+            "Properties": {
+              "LogGroupName": "/aws/lambda/aws-crud-api-dev-createProducts"
+            }
+          },
+          "ListProductsLogGroup": {
+            "Type": "AWS::Logs::LogGroup",
+            "Properties": {
+              "LogGroupName": "/aws/lambda/aws-crud-api-dev-listProducts"
+            }
+          },
+          "GetByIdProductLogGroup": {
+            "Type": "AWS::Logs::LogGroup",
+            "Properties": {
+              "LogGroupName": "/aws/lambda/aws-crud-api-dev-getByIdProduct"
+            }
+          },
+          "GupdateByIdProductLogGroup": {
+            "Type": "AWS::Logs::LogGroup",
+            "Properties": {
+              "LogGroupName": "/aws/lambda/aws-crud-api-dev-gupdateByIdProduct"
+            }
+          },
+          "DeleteByIdProductLogGroup": {
+            "Type": "AWS::Logs::LogGroup",
+            "Properties": {
+              "LogGroupName": "/aws/lambda/aws-crud-api-dev-deleteByIdProduct"
+            }
+          },
           "IamRoleLambdaExecution": {
             "Type": "AWS::IAM::Role",
             "Properties": {
@@ -105,16 +173,27 @@
                   {
                     "Effect": "Allow",
                     "Principal": {
-                      "Service": ["lambda.amazonaws.com"]
+                      "Service": [
+                        "lambda.amazonaws.com"
+                      ]
                     },
-                    "Action": ["sts:AssumeRole"]
+                    "Action": [
+                      "sts:AssumeRole"
+                    ]
                   }
                 ]
               },
               "Policies": [
                 {
                   "PolicyName": {
-                    "Fn::Join": ["-", ["aws-crud-api", "dev", "lambda"]]
+                    "Fn::Join": [
+                      "-",
+                      [
+                        "aws-crud-api",
+                        "dev",
+                        "lambda"
+                      ]
+                    ]
                   },
                   "PolicyDocument": {
                     "Version": "2012-10-17",
@@ -134,12 +213,17 @@
                       },
                       {
                         "Effect": "Allow",
-                        "Action": ["logs:PutLogEvents"],
+                        "Action": [
+                          "logs:PutLogEvents"
+                        ],
                         "Resource": [
                           {
                             "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/aws-crud-api-dev*:*:*"
                           }
                         ]
+                      },
+                      {
+                        "$ref": "$[\"service\"][\"provider\"][\"iamRoleStatements\"][0]"
                       }
                     ]
                   }
@@ -168,7 +252,7 @@
                 "S3Bucket": {
                   "Ref": "ServerlessDeploymentBucket"
                 },
-                "S3Key": "serverless/aws-crud-api/dev/1756192197873-2025-08-26T07:09:57.873Z/aws-crud-api.zip"
+                "S3Key": "serverless/aws-crud-api/dev/1756609555477-2025-08-31T03:05:55.477Z/aws-crud-api.zip"
               },
               "Handler": "src/handlers/createOrders.handler",
               "Runtime": "nodejs18.x",
@@ -185,19 +269,376 @@
                 }
               },
               "Role": {
-                "Fn::GetAtt": ["IamRoleLambdaExecution", "Arn"]
+                "Fn::GetAtt": [
+                  "IamRoleLambdaExecution",
+                  "Arn"
+                ]
               }
             },
-            "DependsOn": ["CreateOrderLogGroup"]
+            "DependsOn": [
+              "CreateOrderLogGroup"
+            ]
           },
-          "CreateOrderLambdaVersion7JxuOt3N38bvcTu7j5VxBdlzwwwUcgWhV3NcaVeU4": {
+          "GetByIdOrderLambdaFunction": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+              "Code": {
+                "S3Bucket": {
+                  "Ref": "ServerlessDeploymentBucket"
+                },
+                "S3Key": "serverless/aws-crud-api/dev/1756609555477-2025-08-31T03:05:55.477Z/aws-crud-api.zip"
+              },
+              "Handler": "src/handlers/getOrdersById.handler",
+              "Runtime": "nodejs18.x",
+              "FunctionName": "aws-crud-api-dev-getByIdOrder",
+              "MemorySize": 1024,
+              "Timeout": 6,
+              "Environment": {
+                "Variables": {
+                  "STAGE": "dev",
+                  "PRODUCTS_TABLE_NAME": "aws-crud-api-dev-products",
+                  "ORDERS_TABLE_NAME": "aws-crud-api-dev-orders",
+                  "LOG_LEVEL": "DEBUG",
+                  "IS_OFFLINE": "false"
+                }
+              },
+              "Role": {
+                "Fn::GetAtt": [
+                  "IamRoleLambdaExecution",
+                  "Arn"
+                ]
+              }
+            },
+            "DependsOn": [
+              "GetByIdOrderLogGroup"
+            ]
+          },
+          "GetByUserOrderLambdaFunction": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+              "Code": {
+                "S3Bucket": {
+                  "Ref": "ServerlessDeploymentBucket"
+                },
+                "S3Key": "serverless/aws-crud-api/dev/1756609555477-2025-08-31T03:05:55.477Z/aws-crud-api.zip"
+              },
+              "Handler": "src/handlers/getOrdersByUser.handler",
+              "Runtime": "nodejs18.x",
+              "FunctionName": "aws-crud-api-dev-getByUserOrder",
+              "MemorySize": 1024,
+              "Timeout": 6,
+              "Environment": {
+                "Variables": {
+                  "STAGE": "dev",
+                  "PRODUCTS_TABLE_NAME": "aws-crud-api-dev-products",
+                  "ORDERS_TABLE_NAME": "aws-crud-api-dev-orders",
+                  "LOG_LEVEL": "DEBUG",
+                  "IS_OFFLINE": "false"
+                }
+              },
+              "Role": {
+                "Fn::GetAtt": [
+                  "IamRoleLambdaExecution",
+                  "Arn"
+                ]
+              }
+            },
+            "DependsOn": [
+              "GetByUserOrderLogGroup"
+            ]
+          },
+          "ConfirmOrderLambdaFunction": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+              "Code": {
+                "S3Bucket": {
+                  "Ref": "ServerlessDeploymentBucket"
+                },
+                "S3Key": "serverless/aws-crud-api/dev/1756609555477-2025-08-31T03:05:55.477Z/aws-crud-api.zip"
+              },
+              "Handler": "src/handlers/statusOrdersConfirm.handler",
+              "Runtime": "nodejs18.x",
+              "FunctionName": "aws-crud-api-dev-confirmOrder",
+              "MemorySize": 1024,
+              "Timeout": 6,
+              "Environment": {
+                "Variables": {
+                  "STAGE": "dev",
+                  "PRODUCTS_TABLE_NAME": "aws-crud-api-dev-products",
+                  "ORDERS_TABLE_NAME": "aws-crud-api-dev-orders",
+                  "LOG_LEVEL": "DEBUG",
+                  "IS_OFFLINE": "false"
+                }
+              },
+              "Role": {
+                "Fn::GetAtt": [
+                  "IamRoleLambdaExecution",
+                  "Arn"
+                ]
+              }
+            },
+            "DependsOn": [
+              "ConfirmOrderLogGroup"
+            ]
+          },
+          "CreateProductsLambdaFunction": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+              "Code": {
+                "S3Bucket": {
+                  "Ref": "ServerlessDeploymentBucket"
+                },
+                "S3Key": "serverless/aws-crud-api/dev/1756609555477-2025-08-31T03:05:55.477Z/aws-crud-api.zip"
+              },
+              "Handler": "src/handlers/createProducts.handler",
+              "Runtime": "nodejs18.x",
+              "FunctionName": "aws-crud-api-dev-createProducts",
+              "MemorySize": 1024,
+              "Timeout": 6,
+              "Environment": {
+                "Variables": {
+                  "STAGE": "dev",
+                  "PRODUCTS_TABLE_NAME": "aws-crud-api-dev-products",
+                  "ORDERS_TABLE_NAME": "aws-crud-api-dev-orders",
+                  "LOG_LEVEL": "DEBUG",
+                  "IS_OFFLINE": "false"
+                }
+              },
+              "Role": {
+                "Fn::GetAtt": [
+                  "IamRoleLambdaExecution",
+                  "Arn"
+                ]
+              }
+            },
+            "DependsOn": [
+              "CreateProductsLogGroup"
+            ]
+          },
+          "ListProductsLambdaFunction": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+              "Code": {
+                "S3Bucket": {
+                  "Ref": "ServerlessDeploymentBucket"
+                },
+                "S3Key": "serverless/aws-crud-api/dev/1756609555477-2025-08-31T03:05:55.477Z/aws-crud-api.zip"
+              },
+              "Handler": "src/handlers/listProducts.handler",
+              "Runtime": "nodejs18.x",
+              "FunctionName": "aws-crud-api-dev-listProducts",
+              "MemorySize": 1024,
+              "Timeout": 6,
+              "Environment": {
+                "Variables": {
+                  "STAGE": "dev",
+                  "PRODUCTS_TABLE_NAME": "aws-crud-api-dev-products",
+                  "ORDERS_TABLE_NAME": "aws-crud-api-dev-orders",
+                  "LOG_LEVEL": "DEBUG",
+                  "IS_OFFLINE": "false"
+                }
+              },
+              "Role": {
+                "Fn::GetAtt": [
+                  "IamRoleLambdaExecution",
+                  "Arn"
+                ]
+              }
+            },
+            "DependsOn": [
+              "ListProductsLogGroup"
+            ]
+          },
+          "GetByIdProductLambdaFunction": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+              "Code": {
+                "S3Bucket": {
+                  "Ref": "ServerlessDeploymentBucket"
+                },
+                "S3Key": "serverless/aws-crud-api/dev/1756609555477-2025-08-31T03:05:55.477Z/aws-crud-api.zip"
+              },
+              "Handler": "src/handlers/getProductsById.handler",
+              "Runtime": "nodejs18.x",
+              "FunctionName": "aws-crud-api-dev-getByIdProduct",
+              "MemorySize": 1024,
+              "Timeout": 6,
+              "Environment": {
+                "Variables": {
+                  "STAGE": "dev",
+                  "PRODUCTS_TABLE_NAME": "aws-crud-api-dev-products",
+                  "ORDERS_TABLE_NAME": "aws-crud-api-dev-orders",
+                  "LOG_LEVEL": "DEBUG",
+                  "IS_OFFLINE": "false"
+                }
+              },
+              "Role": {
+                "Fn::GetAtt": [
+                  "IamRoleLambdaExecution",
+                  "Arn"
+                ]
+              }
+            },
+            "DependsOn": [
+              "GetByIdProductLogGroup"
+            ]
+          },
+          "GupdateByIdProductLambdaFunction": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+              "Code": {
+                "S3Bucket": {
+                  "Ref": "ServerlessDeploymentBucket"
+                },
+                "S3Key": "serverless/aws-crud-api/dev/1756609555477-2025-08-31T03:05:55.477Z/aws-crud-api.zip"
+              },
+              "Handler": "src/handlers/updateByIdProducts.handler",
+              "Runtime": "nodejs18.x",
+              "FunctionName": "aws-crud-api-dev-gupdateByIdProduct",
+              "MemorySize": 1024,
+              "Timeout": 6,
+              "Environment": {
+                "Variables": {
+                  "STAGE": "dev",
+                  "PRODUCTS_TABLE_NAME": "aws-crud-api-dev-products",
+                  "ORDERS_TABLE_NAME": "aws-crud-api-dev-orders",
+                  "LOG_LEVEL": "DEBUG",
+                  "IS_OFFLINE": "false"
+                }
+              },
+              "Role": {
+                "Fn::GetAtt": [
+                  "IamRoleLambdaExecution",
+                  "Arn"
+                ]
+              }
+            },
+            "DependsOn": [
+              "GupdateByIdProductLogGroup"
+            ]
+          },
+          "DeleteByIdProductLambdaFunction": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+              "Code": {
+                "S3Bucket": {
+                  "Ref": "ServerlessDeploymentBucket"
+                },
+                "S3Key": "serverless/aws-crud-api/dev/1756609555477-2025-08-31T03:05:55.477Z/aws-crud-api.zip"
+              },
+              "Handler": "src/handlers/deleteProductsById.handler",
+              "Runtime": "nodejs18.x",
+              "FunctionName": "aws-crud-api-dev-deleteByIdProduct",
+              "MemorySize": 1024,
+              "Timeout": 6,
+              "Environment": {
+                "Variables": {
+                  "STAGE": "dev",
+                  "PRODUCTS_TABLE_NAME": "aws-crud-api-dev-products",
+                  "ORDERS_TABLE_NAME": "aws-crud-api-dev-orders",
+                  "LOG_LEVEL": "DEBUG",
+                  "IS_OFFLINE": "false"
+                }
+              },
+              "Role": {
+                "Fn::GetAtt": [
+                  "IamRoleLambdaExecution",
+                  "Arn"
+                ]
+              }
+            },
+            "DependsOn": [
+              "DeleteByIdProductLogGroup"
+            ]
+          },
+          "CreateOrderLambdaVersionGivGlTluBx5kLjbe3anIffSftZWTFdprcIDJdjVxRe0": {
             "Type": "AWS::Lambda::Version",
             "DeletionPolicy": "Retain",
             "Properties": {
               "FunctionName": {
                 "Ref": "CreateOrderLambdaFunction"
               },
-              "CodeSha256": "PyVgKmjfp9ir+Clah1mFmYiRL+WV0FdKcSQdl8yc5HU="
+              "CodeSha256": "pBxFbCyaljBK7IlnoOLIn4kQyqeZ0cblfe0u49r+WUQ="
+            }
+          },
+          "GetByIdOrderLambdaVersiondUPjTdZ1TNVUfAKW534By8I3vyL7lk1aWXNFhEDveCg": {
+            "Type": "AWS::Lambda::Version",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+              "FunctionName": {
+                "Ref": "GetByIdOrderLambdaFunction"
+              },
+              "CodeSha256": "pBxFbCyaljBK7IlnoOLIn4kQyqeZ0cblfe0u49r+WUQ="
+            }
+          },
+          "GetByUserOrderLambdaVersiongGC0CnJpMS36GCiVKBA57bTfZpUUXZjrIKFJM46oUE": {
+            "Type": "AWS::Lambda::Version",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+              "FunctionName": {
+                "Ref": "GetByUserOrderLambdaFunction"
+              },
+              "CodeSha256": "pBxFbCyaljBK7IlnoOLIn4kQyqeZ0cblfe0u49r+WUQ="
+            }
+          },
+          "ConfirmOrderLambdaVersionQWw9K4k4CialOlS0ZEyxg7FYi7hCPaArT1oxTFXlU": {
+            "Type": "AWS::Lambda::Version",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+              "FunctionName": {
+                "Ref": "ConfirmOrderLambdaFunction"
+              },
+              "CodeSha256": "pBxFbCyaljBK7IlnoOLIn4kQyqeZ0cblfe0u49r+WUQ="
+            }
+          },
+          "CreateProductsLambdaVersion9AYp2BUUZraRUTXTO3AjAwvFA4k0mxI6FaNpqxQU": {
+            "Type": "AWS::Lambda::Version",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+              "FunctionName": {
+                "Ref": "CreateProductsLambdaFunction"
+              },
+              "CodeSha256": "pBxFbCyaljBK7IlnoOLIn4kQyqeZ0cblfe0u49r+WUQ="
+            }
+          },
+          "ListProductsLambdaVersionkYtU2tpLtTQYOkEobYST496HTwuTijPiU1mH5Qr0QQ": {
+            "Type": "AWS::Lambda::Version",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+              "FunctionName": {
+                "Ref": "ListProductsLambdaFunction"
+              },
+              "CodeSha256": "pBxFbCyaljBK7IlnoOLIn4kQyqeZ0cblfe0u49r+WUQ="
+            }
+          },
+          "GetByIdProductLambdaVersionZP4nxUrdy9i5UT0vP1vMS7TNCM8sX0JY5fJ4b68": {
+            "Type": "AWS::Lambda::Version",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+              "FunctionName": {
+                "Ref": "GetByIdProductLambdaFunction"
+              },
+              "CodeSha256": "pBxFbCyaljBK7IlnoOLIn4kQyqeZ0cblfe0u49r+WUQ="
+            }
+          },
+          "GupdateByIdProductLambdaVersionWzGkQdaOzeFqXHw1uYFg8qBZymcRSLo6yhvuIPIKRgg": {
+            "Type": "AWS::Lambda::Version",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+              "FunctionName": {
+                "Ref": "GupdateByIdProductLambdaFunction"
+              },
+              "CodeSha256": "pBxFbCyaljBK7IlnoOLIn4kQyqeZ0cblfe0u49r+WUQ="
+            }
+          },
+          "DeleteByIdProductLambdaVersionO3kNDymfjUAYwcSjk6v5hY2p5BVGuMrx4nwqxZTF7I": {
+            "Type": "AWS::Lambda::Version",
+            "DeletionPolicy": "Retain",
+            "Properties": {
+              "FunctionName": {
+                "Ref": "DeleteByIdProductLambdaFunction"
+              },
+              "CodeSha256": "pBxFbCyaljBK7IlnoOLIn4kQyqeZ0cblfe0u49r+WUQ="
             }
           },
           "HttpApi": {
@@ -224,7 +665,10 @@
             "Type": "AWS::Lambda::Permission",
             "Properties": {
               "FunctionName": {
-                "Fn::GetAtt": ["CreateOrderLambdaFunction", "Arn"]
+                "Fn::GetAtt": [
+                  "CreateOrderLambdaFunction",
+                  "Arn"
+                ]
               },
               "Action": "lambda:InvokeFunction",
               "Principal": "apigateway.amazonaws.com",
@@ -288,6 +732,582 @@
               }
             },
             "DependsOn": "HttpApiIntegrationCreateOrder"
+          },
+          "GetByIdOrderLambdaPermissionHttpApi": {
+            "Type": "AWS::Lambda::Permission",
+            "Properties": {
+              "FunctionName": {
+                "Fn::GetAtt": [
+                  "GetByIdOrderLambdaFunction",
+                  "Arn"
+                ]
+              },
+              "Action": "lambda:InvokeFunction",
+              "Principal": "apigateway.amazonaws.com",
+              "SourceArn": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition"
+                    },
+                    ":execute-api:",
+                    {
+                      "Ref": "AWS::Region"
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId"
+                    },
+                    ":",
+                    {
+                      "Ref": "HttpApi"
+                    },
+                    "/*"
+                  ]
+                ]
+              }
+            }
+          },
+          "HttpApiIntegrationGetByIdOrder": {
+            "Type": "AWS::ApiGatewayV2::Integration",
+            "Properties": {
+              "ApiId": {
+                "Ref": "HttpApi"
+              },
+              "IntegrationType": "AWS_PROXY",
+              "IntegrationUri": {
+                "$ref": "$[\"service\"][\"provider\"][\"compiledCloudFormationTemplate\"][\"Resources\"][\"GetByIdOrderLambdaPermissionHttpApi\"][\"Properties\"][\"FunctionName\"]"
+              },
+              "PayloadFormatVersion": "2.0",
+              "TimeoutInMillis": 30000
+            }
+          },
+          "HttpApiRouteGetOrdersIdVar": {
+            "Type": "AWS::ApiGatewayV2::Route",
+            "Properties": {
+              "ApiId": {
+                "Ref": "HttpApi"
+              },
+              "RouteKey": "GET /orders/{id}",
+              "Target": {
+                "Fn::Join": [
+                  "/",
+                  [
+                    "integrations",
+                    {
+                      "Ref": "HttpApiIntegrationGetByIdOrder"
+                    }
+                  ]
+                ]
+              }
+            },
+            "DependsOn": "HttpApiIntegrationGetByIdOrder"
+          },
+          "GetByUserOrderLambdaPermissionHttpApi": {
+            "Type": "AWS::Lambda::Permission",
+            "Properties": {
+              "FunctionName": {
+                "Fn::GetAtt": [
+                  "GetByUserOrderLambdaFunction",
+                  "Arn"
+                ]
+              },
+              "Action": "lambda:InvokeFunction",
+              "Principal": "apigateway.amazonaws.com",
+              "SourceArn": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition"
+                    },
+                    ":execute-api:",
+                    {
+                      "Ref": "AWS::Region"
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId"
+                    },
+                    ":",
+                    {
+                      "Ref": "HttpApi"
+                    },
+                    "/*"
+                  ]
+                ]
+              }
+            }
+          },
+          "HttpApiIntegrationGetByUserOrder": {
+            "Type": "AWS::ApiGatewayV2::Integration",
+            "Properties": {
+              "ApiId": {
+                "Ref": "HttpApi"
+              },
+              "IntegrationType": "AWS_PROXY",
+              "IntegrationUri": {
+                "$ref": "$[\"service\"][\"provider\"][\"compiledCloudFormationTemplate\"][\"Resources\"][\"GetByUserOrderLambdaPermissionHttpApi\"][\"Properties\"][\"FunctionName\"]"
+              },
+              "PayloadFormatVersion": "2.0",
+              "TimeoutInMillis": 30000
+            }
+          },
+          "HttpApiRouteGetUsersOrdersUseridVar": {
+            "Type": "AWS::ApiGatewayV2::Route",
+            "Properties": {
+              "ApiId": {
+                "Ref": "HttpApi"
+              },
+              "RouteKey": "GET /users/orders/{userId}",
+              "Target": {
+                "Fn::Join": [
+                  "/",
+                  [
+                    "integrations",
+                    {
+                      "Ref": "HttpApiIntegrationGetByUserOrder"
+                    }
+                  ]
+                ]
+              }
+            },
+            "DependsOn": "HttpApiIntegrationGetByUserOrder"
+          },
+          "ConfirmOrderLambdaPermissionHttpApi": {
+            "Type": "AWS::Lambda::Permission",
+            "Properties": {
+              "FunctionName": {
+                "Fn::GetAtt": [
+                  "ConfirmOrderLambdaFunction",
+                  "Arn"
+                ]
+              },
+              "Action": "lambda:InvokeFunction",
+              "Principal": "apigateway.amazonaws.com",
+              "SourceArn": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition"
+                    },
+                    ":execute-api:",
+                    {
+                      "Ref": "AWS::Region"
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId"
+                    },
+                    ":",
+                    {
+                      "Ref": "HttpApi"
+                    },
+                    "/*"
+                  ]
+                ]
+              }
+            }
+          },
+          "HttpApiIntegrationConfirmOrder": {
+            "Type": "AWS::ApiGatewayV2::Integration",
+            "Properties": {
+              "ApiId": {
+                "Ref": "HttpApi"
+              },
+              "IntegrationType": "AWS_PROXY",
+              "IntegrationUri": {
+                "$ref": "$[\"service\"][\"provider\"][\"compiledCloudFormationTemplate\"][\"Resources\"][\"ConfirmOrderLambdaPermissionHttpApi\"][\"Properties\"][\"FunctionName\"]"
+              },
+              "PayloadFormatVersion": "2.0",
+              "TimeoutInMillis": 30000
+            }
+          },
+          "HttpApiRoutePatchOrdersConfirmOrderidVar": {
+            "Type": "AWS::ApiGatewayV2::Route",
+            "Properties": {
+              "ApiId": {
+                "Ref": "HttpApi"
+              },
+              "RouteKey": "PATCH /orders/confirm/{orderId}",
+              "Target": {
+                "Fn::Join": [
+                  "/",
+                  [
+                    "integrations",
+                    {
+                      "Ref": "HttpApiIntegrationConfirmOrder"
+                    }
+                  ]
+                ]
+              }
+            },
+            "DependsOn": "HttpApiIntegrationConfirmOrder"
+          },
+          "CreateProductsLambdaPermissionHttpApi": {
+            "Type": "AWS::Lambda::Permission",
+            "Properties": {
+              "FunctionName": {
+                "Fn::GetAtt": [
+                  "CreateProductsLambdaFunction",
+                  "Arn"
+                ]
+              },
+              "Action": "lambda:InvokeFunction",
+              "Principal": "apigateway.amazonaws.com",
+              "SourceArn": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition"
+                    },
+                    ":execute-api:",
+                    {
+                      "Ref": "AWS::Region"
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId"
+                    },
+                    ":",
+                    {
+                      "Ref": "HttpApi"
+                    },
+                    "/*"
+                  ]
+                ]
+              }
+            }
+          },
+          "HttpApiIntegrationCreateProducts": {
+            "Type": "AWS::ApiGatewayV2::Integration",
+            "Properties": {
+              "ApiId": {
+                "Ref": "HttpApi"
+              },
+              "IntegrationType": "AWS_PROXY",
+              "IntegrationUri": {
+                "$ref": "$[\"service\"][\"provider\"][\"compiledCloudFormationTemplate\"][\"Resources\"][\"CreateProductsLambdaPermissionHttpApi\"][\"Properties\"][\"FunctionName\"]"
+              },
+              "PayloadFormatVersion": "2.0",
+              "TimeoutInMillis": 30000
+            }
+          },
+          "HttpApiRoutePostProducts": {
+            "Type": "AWS::ApiGatewayV2::Route",
+            "Properties": {
+              "ApiId": {
+                "Ref": "HttpApi"
+              },
+              "RouteKey": "POST /products",
+              "Target": {
+                "Fn::Join": [
+                  "/",
+                  [
+                    "integrations",
+                    {
+                      "Ref": "HttpApiIntegrationCreateProducts"
+                    }
+                  ]
+                ]
+              }
+            },
+            "DependsOn": "HttpApiIntegrationCreateProducts"
+          },
+          "ListProductsLambdaPermissionHttpApi": {
+            "Type": "AWS::Lambda::Permission",
+            "Properties": {
+              "FunctionName": {
+                "Fn::GetAtt": [
+                  "ListProductsLambdaFunction",
+                  "Arn"
+                ]
+              },
+              "Action": "lambda:InvokeFunction",
+              "Principal": "apigateway.amazonaws.com",
+              "SourceArn": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition"
+                    },
+                    ":execute-api:",
+                    {
+                      "Ref": "AWS::Region"
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId"
+                    },
+                    ":",
+                    {
+                      "Ref": "HttpApi"
+                    },
+                    "/*"
+                  ]
+                ]
+              }
+            }
+          },
+          "HttpApiIntegrationListProducts": {
+            "Type": "AWS::ApiGatewayV2::Integration",
+            "Properties": {
+              "ApiId": {
+                "Ref": "HttpApi"
+              },
+              "IntegrationType": "AWS_PROXY",
+              "IntegrationUri": {
+                "$ref": "$[\"service\"][\"provider\"][\"compiledCloudFormationTemplate\"][\"Resources\"][\"ListProductsLambdaPermissionHttpApi\"][\"Properties\"][\"FunctionName\"]"
+              },
+              "PayloadFormatVersion": "2.0",
+              "TimeoutInMillis": 30000
+            }
+          },
+          "HttpApiRouteGetProducts": {
+            "Type": "AWS::ApiGatewayV2::Route",
+            "Properties": {
+              "ApiId": {
+                "Ref": "HttpApi"
+              },
+              "RouteKey": "GET /products",
+              "Target": {
+                "Fn::Join": [
+                  "/",
+                  [
+                    "integrations",
+                    {
+                      "Ref": "HttpApiIntegrationListProducts"
+                    }
+                  ]
+                ]
+              }
+            },
+            "DependsOn": "HttpApiIntegrationListProducts"
+          },
+          "GetByIdProductLambdaPermissionHttpApi": {
+            "Type": "AWS::Lambda::Permission",
+            "Properties": {
+              "FunctionName": {
+                "Fn::GetAtt": [
+                  "GetByIdProductLambdaFunction",
+                  "Arn"
+                ]
+              },
+              "Action": "lambda:InvokeFunction",
+              "Principal": "apigateway.amazonaws.com",
+              "SourceArn": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition"
+                    },
+                    ":execute-api:",
+                    {
+                      "Ref": "AWS::Region"
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId"
+                    },
+                    ":",
+                    {
+                      "Ref": "HttpApi"
+                    },
+                    "/*"
+                  ]
+                ]
+              }
+            }
+          },
+          "HttpApiIntegrationGetByIdProduct": {
+            "Type": "AWS::ApiGatewayV2::Integration",
+            "Properties": {
+              "ApiId": {
+                "Ref": "HttpApi"
+              },
+              "IntegrationType": "AWS_PROXY",
+              "IntegrationUri": {
+                "$ref": "$[\"service\"][\"provider\"][\"compiledCloudFormationTemplate\"][\"Resources\"][\"GetByIdProductLambdaPermissionHttpApi\"][\"Properties\"][\"FunctionName\"]"
+              },
+              "PayloadFormatVersion": "2.0",
+              "TimeoutInMillis": 30000
+            }
+          },
+          "HttpApiRouteGetProductsProductidVar": {
+            "Type": "AWS::ApiGatewayV2::Route",
+            "Properties": {
+              "ApiId": {
+                "Ref": "HttpApi"
+              },
+              "RouteKey": "GET /products/{productId}",
+              "Target": {
+                "Fn::Join": [
+                  "/",
+                  [
+                    "integrations",
+                    {
+                      "Ref": "HttpApiIntegrationGetByIdProduct"
+                    }
+                  ]
+                ]
+              }
+            },
+            "DependsOn": "HttpApiIntegrationGetByIdProduct"
+          },
+          "GupdateByIdProductLambdaPermissionHttpApi": {
+            "Type": "AWS::Lambda::Permission",
+            "Properties": {
+              "FunctionName": {
+                "Fn::GetAtt": [
+                  "GupdateByIdProductLambdaFunction",
+                  "Arn"
+                ]
+              },
+              "Action": "lambda:InvokeFunction",
+              "Principal": "apigateway.amazonaws.com",
+              "SourceArn": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition"
+                    },
+                    ":execute-api:",
+                    {
+                      "Ref": "AWS::Region"
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId"
+                    },
+                    ":",
+                    {
+                      "Ref": "HttpApi"
+                    },
+                    "/*"
+                  ]
+                ]
+              }
+            }
+          },
+          "HttpApiIntegrationGupdateByIdProduct": {
+            "Type": "AWS::ApiGatewayV2::Integration",
+            "Properties": {
+              "ApiId": {
+                "Ref": "HttpApi"
+              },
+              "IntegrationType": "AWS_PROXY",
+              "IntegrationUri": {
+                "$ref": "$[\"service\"][\"provider\"][\"compiledCloudFormationTemplate\"][\"Resources\"][\"GupdateByIdProductLambdaPermissionHttpApi\"][\"Properties\"][\"FunctionName\"]"
+              },
+              "PayloadFormatVersion": "2.0",
+              "TimeoutInMillis": 30000
+            }
+          },
+          "HttpApiRoutePutProductsProductidVar": {
+            "Type": "AWS::ApiGatewayV2::Route",
+            "Properties": {
+              "ApiId": {
+                "Ref": "HttpApi"
+              },
+              "RouteKey": "PUT /products/{productId}",
+              "Target": {
+                "Fn::Join": [
+                  "/",
+                  [
+                    "integrations",
+                    {
+                      "Ref": "HttpApiIntegrationGupdateByIdProduct"
+                    }
+                  ]
+                ]
+              }
+            },
+            "DependsOn": "HttpApiIntegrationGupdateByIdProduct"
+          },
+          "DeleteByIdProductLambdaPermissionHttpApi": {
+            "Type": "AWS::Lambda::Permission",
+            "Properties": {
+              "FunctionName": {
+                "Fn::GetAtt": [
+                  "DeleteByIdProductLambdaFunction",
+                  "Arn"
+                ]
+              },
+              "Action": "lambda:InvokeFunction",
+              "Principal": "apigateway.amazonaws.com",
+              "SourceArn": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition"
+                    },
+                    ":execute-api:",
+                    {
+                      "Ref": "AWS::Region"
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId"
+                    },
+                    ":",
+                    {
+                      "Ref": "HttpApi"
+                    },
+                    "/*"
+                  ]
+                ]
+              }
+            }
+          },
+          "HttpApiIntegrationDeleteByIdProduct": {
+            "Type": "AWS::ApiGatewayV2::Integration",
+            "Properties": {
+              "ApiId": {
+                "Ref": "HttpApi"
+              },
+              "IntegrationType": "AWS_PROXY",
+              "IntegrationUri": {
+                "$ref": "$[\"service\"][\"provider\"][\"compiledCloudFormationTemplate\"][\"Resources\"][\"DeleteByIdProductLambdaPermissionHttpApi\"][\"Properties\"][\"FunctionName\"]"
+              },
+              "PayloadFormatVersion": "2.0",
+              "TimeoutInMillis": 30000
+            }
+          },
+          "HttpApiRouteDeleteProductsProductidVar": {
+            "Type": "AWS::ApiGatewayV2::Route",
+            "Properties": {
+              "ApiId": {
+                "Ref": "HttpApi"
+              },
+              "RouteKey": "DELETE /products/{productId}",
+              "Target": {
+                "Fn::Join": [
+                  "/",
+                  [
+                    "integrations",
+                    {
+                      "Ref": "HttpApiIntegrationDeleteByIdProduct"
+                    }
+                  ]
+                ]
+              }
+            },
+            "DependsOn": "HttpApiIntegrationDeleteByIdProduct"
           },
           "ProductsTable": {
             "Type": "AWS::DynamoDB::Table",
@@ -378,10 +1398,82 @@
           "CreateOrderLambdaFunctionQualifiedArn": {
             "Description": "Current Lambda function version",
             "Value": {
-              "Ref": "CreateOrderLambdaVersion7JxuOt3N38bvcTu7j5VxBdlzwwwUcgWhV3NcaVeU4"
+              "Ref": "CreateOrderLambdaVersionGivGlTluBx5kLjbe3anIffSftZWTFdprcIDJdjVxRe0"
             },
             "Export": {
               "Name": "sls-aws-crud-api-dev-CreateOrderLambdaFunctionQualifiedArn"
+            }
+          },
+          "GetByIdOrderLambdaFunctionQualifiedArn": {
+            "Description": "Current Lambda function version",
+            "Value": {
+              "Ref": "GetByIdOrderLambdaVersiondUPjTdZ1TNVUfAKW534By8I3vyL7lk1aWXNFhEDveCg"
+            },
+            "Export": {
+              "Name": "sls-aws-crud-api-dev-GetByIdOrderLambdaFunctionQualifiedArn"
+            }
+          },
+          "GetByUserOrderLambdaFunctionQualifiedArn": {
+            "Description": "Current Lambda function version",
+            "Value": {
+              "Ref": "GetByUserOrderLambdaVersiongGC0CnJpMS36GCiVKBA57bTfZpUUXZjrIKFJM46oUE"
+            },
+            "Export": {
+              "Name": "sls-aws-crud-api-dev-GetByUserOrderLambdaFunctionQualifiedArn"
+            }
+          },
+          "ConfirmOrderLambdaFunctionQualifiedArn": {
+            "Description": "Current Lambda function version",
+            "Value": {
+              "Ref": "ConfirmOrderLambdaVersionQWw9K4k4CialOlS0ZEyxg7FYi7hCPaArT1oxTFXlU"
+            },
+            "Export": {
+              "Name": "sls-aws-crud-api-dev-ConfirmOrderLambdaFunctionQualifiedArn"
+            }
+          },
+          "CreateProductsLambdaFunctionQualifiedArn": {
+            "Description": "Current Lambda function version",
+            "Value": {
+              "Ref": "CreateProductsLambdaVersion9AYp2BUUZraRUTXTO3AjAwvFA4k0mxI6FaNpqxQU"
+            },
+            "Export": {
+              "Name": "sls-aws-crud-api-dev-CreateProductsLambdaFunctionQualifiedArn"
+            }
+          },
+          "ListProductsLambdaFunctionQualifiedArn": {
+            "Description": "Current Lambda function version",
+            "Value": {
+              "Ref": "ListProductsLambdaVersionkYtU2tpLtTQYOkEobYST496HTwuTijPiU1mH5Qr0QQ"
+            },
+            "Export": {
+              "Name": "sls-aws-crud-api-dev-ListProductsLambdaFunctionQualifiedArn"
+            }
+          },
+          "GetByIdProductLambdaFunctionQualifiedArn": {
+            "Description": "Current Lambda function version",
+            "Value": {
+              "Ref": "GetByIdProductLambdaVersionZP4nxUrdy9i5UT0vP1vMS7TNCM8sX0JY5fJ4b68"
+            },
+            "Export": {
+              "Name": "sls-aws-crud-api-dev-GetByIdProductLambdaFunctionQualifiedArn"
+            }
+          },
+          "GupdateByIdProductLambdaFunctionQualifiedArn": {
+            "Description": "Current Lambda function version",
+            "Value": {
+              "Ref": "GupdateByIdProductLambdaVersionWzGkQdaOzeFqXHw1uYFg8qBZymcRSLo6yhvuIPIKRgg"
+            },
+            "Export": {
+              "Name": "sls-aws-crud-api-dev-GupdateByIdProductLambdaFunctionQualifiedArn"
+            }
+          },
+          "DeleteByIdProductLambdaFunctionQualifiedArn": {
+            "Description": "Current Lambda function version",
+            "Value": {
+              "Ref": "DeleteByIdProductLambdaVersionO3kNDymfjUAYwcSjk6v5hY2p5BVGuMrx4nwqxZTF7I"
+            },
+            "Export": {
+              "Name": "sls-aws-crud-api-dev-DeleteByIdProductLambdaFunctionQualifiedArn"
             }
           },
           "HttpApiId": {
@@ -512,9 +1604,43 @@
         "target": "node18",
         "platform": "node",
         "concurrency": 10
+      },
+      "dynamodb": {
+        "stages": [
+          "dev"
+        ],
+        "start": {
+          "port": 8000,
+          "inMemory": true,
+          "migrate": true,
+          "seed": true,
+          "noStart": false
+        },
+        "seed": {
+          "dev": {
+            "sources": [
+              {
+                "table": "aws-crud-api-dev-products",
+                "sources": [
+                  "./seed/products.json"
+                ]
+              },
+              {
+                "table": "aws-crud-api-dev-orders",
+                "sources": [
+                  "./seed/orders.json"
+                ]
+              }
+            ]
+          }
+        }
       }
     },
-    "plugins": ["serverless-dynamodb-local", "serverless-offline", "serverless-esbuild"],
+    "plugins": [
+      "serverless-dynamodb-local",
+      "serverless-offline",
+      "serverless-esbuild"
+    ],
     "pluginsData": {},
     "functions": {
       "createOrder": {
@@ -535,7 +1661,167 @@
         "timeout": 6,
         "runtime": "nodejs18.x",
         "vpc": {},
-        "versionLogicalId": "CreateOrderLambdaVersion7JxuOt3N38bvcTu7j5VxBdlzwwwUcgWhV3NcaVeU4"
+        "versionLogicalId": "CreateOrderLambdaVersionGivGlTluBx5kLjbe3anIffSftZWTFdprcIDJdjVxRe0"
+      },
+      "getByIdOrder": {
+        "handler": "src/handlers/getOrdersById.handler",
+        "events": [
+          {
+            "httpApi": {
+              "method": "GET",
+              "path": "/orders/{id}"
+            },
+            "resolvedMethod": "GET",
+            "resolvedPath": "/orders/{id}"
+          }
+        ],
+        "name": "aws-crud-api-dev-getByIdOrder",
+        "package": {},
+        "memory": 1024,
+        "timeout": 6,
+        "runtime": "nodejs18.x",
+        "vpc": {},
+        "versionLogicalId": "GetByIdOrderLambdaVersiondUPjTdZ1TNVUfAKW534By8I3vyL7lk1aWXNFhEDveCg"
+      },
+      "getByUserOrder": {
+        "handler": "src/handlers/getOrdersByUser.handler",
+        "events": [
+          {
+            "httpApi": {
+              "method": "GET",
+              "path": "/users/orders/{userId}"
+            },
+            "resolvedMethod": "GET",
+            "resolvedPath": "/users/orders/{userId}"
+          }
+        ],
+        "name": "aws-crud-api-dev-getByUserOrder",
+        "package": {},
+        "memory": 1024,
+        "timeout": 6,
+        "runtime": "nodejs18.x",
+        "vpc": {},
+        "versionLogicalId": "GetByUserOrderLambdaVersiongGC0CnJpMS36GCiVKBA57bTfZpUUXZjrIKFJM46oUE"
+      },
+      "confirmOrder": {
+        "handler": "src/handlers/statusOrdersConfirm.handler",
+        "events": [
+          {
+            "httpApi": {
+              "method": "PATCH",
+              "path": "/orders/confirm/{orderId}"
+            },
+            "resolvedMethod": "PATCH",
+            "resolvedPath": "/orders/confirm/{orderId}"
+          }
+        ],
+        "name": "aws-crud-api-dev-confirmOrder",
+        "package": {},
+        "memory": 1024,
+        "timeout": 6,
+        "runtime": "nodejs18.x",
+        "vpc": {},
+        "versionLogicalId": "ConfirmOrderLambdaVersionQWw9K4k4CialOlS0ZEyxg7FYi7hCPaArT1oxTFXlU"
+      },
+      "createProducts": {
+        "handler": "src/handlers/createProducts.handler",
+        "events": [
+          {
+            "httpApi": {
+              "method": "POST",
+              "path": "/products"
+            },
+            "resolvedMethod": "POST",
+            "resolvedPath": "/products"
+          }
+        ],
+        "name": "aws-crud-api-dev-createProducts",
+        "package": {},
+        "memory": 1024,
+        "timeout": 6,
+        "runtime": "nodejs18.x",
+        "vpc": {},
+        "versionLogicalId": "CreateProductsLambdaVersion9AYp2BUUZraRUTXTO3AjAwvFA4k0mxI6FaNpqxQU"
+      },
+      "listProducts": {
+        "handler": "src/handlers/listProducts.handler",
+        "events": [
+          {
+            "httpApi": {
+              "method": "GET",
+              "path": "/products"
+            },
+            "resolvedMethod": "GET",
+            "resolvedPath": "/products"
+          }
+        ],
+        "name": "aws-crud-api-dev-listProducts",
+        "package": {},
+        "memory": 1024,
+        "timeout": 6,
+        "runtime": "nodejs18.x",
+        "vpc": {},
+        "versionLogicalId": "ListProductsLambdaVersionkYtU2tpLtTQYOkEobYST496HTwuTijPiU1mH5Qr0QQ"
+      },
+      "getByIdProduct": {
+        "handler": "src/handlers/getProductsById.handler",
+        "events": [
+          {
+            "httpApi": {
+              "method": "GET",
+              "path": "/products/{productId}"
+            },
+            "resolvedMethod": "GET",
+            "resolvedPath": "/products/{productId}"
+          }
+        ],
+        "name": "aws-crud-api-dev-getByIdProduct",
+        "package": {},
+        "memory": 1024,
+        "timeout": 6,
+        "runtime": "nodejs18.x",
+        "vpc": {},
+        "versionLogicalId": "GetByIdProductLambdaVersionZP4nxUrdy9i5UT0vP1vMS7TNCM8sX0JY5fJ4b68"
+      },
+      "gupdateByIdProduct": {
+        "handler": "src/handlers/updateByIdProducts.handler",
+        "events": [
+          {
+            "httpApi": {
+              "method": "PUT",
+              "path": "/products/{productId}"
+            },
+            "resolvedMethod": "PUT",
+            "resolvedPath": "/products/{productId}"
+          }
+        ],
+        "name": "aws-crud-api-dev-gupdateByIdProduct",
+        "package": {},
+        "memory": 1024,
+        "timeout": 6,
+        "runtime": "nodejs18.x",
+        "vpc": {},
+        "versionLogicalId": "GupdateByIdProductLambdaVersionWzGkQdaOzeFqXHw1uYFg8qBZymcRSLo6yhvuIPIKRgg"
+      },
+      "deleteByIdProduct": {
+        "handler": "src/handlers/deleteProductsById.handler",
+        "events": [
+          {
+            "httpApi": {
+              "method": "DELETE",
+              "path": "/products/{productId}"
+            },
+            "resolvedMethod": "DELETE",
+            "resolvedPath": "/products/{productId}"
+          }
+        ],
+        "name": "aws-crud-api-dev-deleteByIdProduct",
+        "package": {},
+        "memory": 1024,
+        "timeout": 6,
+        "runtime": "nodejs18.x",
+        "vpc": {},
+        "versionLogicalId": "DeleteByIdProductLambdaVersionO3kNDymfjUAYwcSjk6v5hY2p5BVGuMrx4nwqxZTF7I"
       }
     },
     "resources": {
@@ -657,7 +1943,7 @@
     "isDashboardMonitoringPreconfigured": false
   },
   "package": {
-    "artifactDirectoryName": "serverless/aws-crud-api/dev/1756192197873-2025-08-26T07:09:57.873Z",
+    "artifactDirectoryName": "serverless/aws-crud-api/dev/1756609555477-2025-08-31T03:05:55.477Z",
     "artifact": "aws-crud-api.zip"
   }
 }
