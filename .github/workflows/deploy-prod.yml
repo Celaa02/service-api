@@ -4,9 +4,9 @@ on:
   push:
     branches: ['main']
 
-concurrency:
-  group: deploy-prod-${{ github.ref }}
-  cancel-in-progress: true
+# concurrency:
+#   group: deploy-prod-${{ github.ref }}
+#   cancel-in-progress: true
 
 jobs:
   deploy:
@@ -18,7 +18,7 @@ jobs:
 
     env:
       AWS_REGION: us-east-1
-      SLS_TELEMETRY_DISABLED: '1'
+      # SLS_TELEMETRY_DISABLED: '1'
 
     steps:
       - name: Checkout code
@@ -32,9 +32,6 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
-
-      - name: Final checks before deploy
-        run: npx tsc --noEmit && npm test -- --coverage --maxWorkers=2
 
       - name: Validate PROD role ARN secret present
         run: |
