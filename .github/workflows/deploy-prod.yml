@@ -36,6 +36,9 @@ jobs:
       - name: Final checks before deploy
         run: npx tsc --noEmit && npm test -- --coverage --maxWorkers=2
 
+      - name: Who am I?
+        run: aws sts get-caller-identity
+
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
