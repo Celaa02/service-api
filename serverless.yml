@@ -119,6 +119,12 @@ functions:
       - httpApi:
           method: PUT
           path: /products/{productId}
+  deleteByIdProduct:
+    handler: src/handlers/deleteProductsById.handler
+    events:
+      - httpApi:
+          method: DELETE
+          path: /products/{productId}
 
 resources:
   Resources:

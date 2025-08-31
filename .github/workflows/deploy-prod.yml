@@ -2,18 +2,23 @@ name: Deploy prod
 
 on:
   push:
-    branches: ["main"]
+    branches: ['main']
+
+concurrency:
+  group: deploy-prod-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment: production # protege con approvals en Settings > Environments
+    environment: production
     permissions:
       contents: read
       id-token: write
 
     env:
       AWS_REGION: us-east-1
+      SLS_TELEMETRY_DISABLED: '1'
 
     steps:
       - name: Checkout code
@@ -22,19 +27,19 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: "18"
-          cache: "npm"
+          node-version: '18'
+          cache: 'npm'
 
       - name: Install dependencies
         run: npm ci
 
       - name: Final checks before deploy
-        run: npx tsc --noEmit && npm test -- --coverage
+        run: npx tsc --noEmit && npm test -- --coverage --maxWorkers=2
 
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME_PROD }}
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Deploy to AWS (prod)
