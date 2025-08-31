@@ -1,0 +1,89 @@
+name: Publish API Docs
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'openapi.template.yaml'
+      - '.github/workflows/docs.yml'
+      - 'serverless.yml'
+
+permissions:
+  id-token: write # OIDC
+  contents: read
+  pages: write
+  actions: read
+
+jobs:
+  build-and-deploy-docs:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      # Instala Serverless para consultar las URLs
+      - name: Install Serverless
+        run: npm i -g serverless@^3
+
+      # (Opcional) instala tus plugins si sls info los requiere
+      # - run: npm ci
+
+      # Asume tu role por OIDC (ajusta role-to-assume y region)
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::<TU_ACCOUNT_ID>:role/<ROLE_CON_PERMISOS_SLS_INFO>
+          aws-region: us-east-1
+
+      # Obtén URLs de API Gateway para DEV y PROD
+      - name: Get DEV/PROD API URLs
+        id: apis
+        run: |
+          # Para HTTP API, serverless info suele mostrar "HttpApi Url: https://xxxxx.execute-api.us-east-1.amazonaws.com"
+          DEV_URL=$(npx serverless info --stage dev --verbose | awk '/HttpApi Url/ {print $4; exit}')
+          PROD_URL=$(npx serverless info --stage prod --verbose | awk '/HttpApi Url/ {print $4; exit}')
+
+          # Fallback para REST API si fuera el caso (busca "endpoints:")
+          if [ -z "$DEV_URL" ]; then
+            DEV_URL=$(npx serverless info --stage dev --verbose | awk '/endpoints:/{f=1;next} f&&/https:/{print $1; exit}')
+          fi
+          if [ -z "$PROD_URL" ]; then
+            PROD_URL=$(npx serverless info --stage prod --verbose | awk '/endpoints:/{f=1;next} f&&/https:/{print $1; exit}')
+          fi
+
+          echo "DEV_URL=$DEV_URL"   >> $GITHUB_OUTPUT
+          echo "PROD_URL=$PROD_URL" >> $GITHUB_OUTPUT
+
+      - name: Build OpenAPI with real URLs
+        run: |
+          mkdir -p docs
+          sed "s|__DEV_URL__|${{ steps.apis.outputs.DEV_URL }}|g; s|__PROD_URL__|${{ steps.apis.outputs.PROD_URL }}|g" \
+            openapi.template.yaml > docs/openapi.yaml
+
+      # Asegura que index.html exista (si ya lo pusiste en repo, puedes omitir este step)
+      - name: Ensure Swagger index
+        run: |
+          if [ ! -f docs/index.html ]; then
+            cat > docs/index.html <<'HTML'
+            <!doctype html><html><head><meta charset="utf-8"/><title>API Docs</title>
+            <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist/swagger-ui.css">
+            <style>body{margin:0}.topbar{display:none}</style></head>
+            <body><div id="swagger-ui"></div>
+            <script src="https://unpkg.com/swagger-ui-dist/swagger-ui-bundle.js"></script>
+            <script>window.onload=()=>{window.ui=SwaggerUIBundle({url:'./openapi.yaml',dom_id:'#swagger-ui',deepLinking:true})}</script>
+            </body></html>
+            HTML
+          fi
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
+
+      - uses: actions/deploy-pages@v4
