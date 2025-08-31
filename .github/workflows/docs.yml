@@ -63,7 +63,7 @@ jobs:
         run: |
           mkdir -p docs
           sed "s|__DEV_URL__|${{ steps.apis.outputs.DEV_URL }}|g; s|__PROD_URL__|${{ steps.apis.outputs.PROD_URL }}|g" \
-            openapi.template.yaml > docs/openapi.yaml
+            openapi.yaml > docs/openapi.yaml
 
       # Asegura que index.html exista (si ya lo pusiste en repo, puedes omitir este step)
       - name: Ensure Swagger index
