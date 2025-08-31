@@ -4,10 +4,6 @@ on:
   push:
     branches: ['develop']
 
-concurrency:
-  group: deploy-dev-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -17,7 +13,6 @@ jobs:
 
     env:
       AWS_REGION: us-east-1
-      SLS_TELEMETRY_DISABLED: '1'
 
     steps:
       - name: Checkout code
@@ -33,7 +28,7 @@ jobs:
         run: npm ci
 
       - name: Sanity check
-        run: npx tsc --noEmit && npm test -- --coverage --maxWorkers=2
+        run: npx tsc --noEmit && npm test -- --coverage
 
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
