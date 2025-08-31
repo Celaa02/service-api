@@ -4,12 +4,12 @@ on:
   push:
     branches: [main]
     paths:
-      - 'openapi.template.yaml'
+      - 'docs/openapi.template.yaml'
       - '.github/workflows/docs.yml'
       - 'serverless.yml'
 
 permissions:
-  id-token: write # OIDC
+  id-token: write
   contents: read
   pages: write
   actions: read
@@ -26,46 +26,39 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
-      # Instala Serverless para consultar las URLs
       - name: Install Serverless
         run: npm i -g serverless@^3
 
-      # (Opcional) instala tus plugins si sls info los requiere
-      # - run: npm ci
-
-      # Asume tu role por OIDC (ajusta role-to-assume y region)
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME_PROD }}
           aws-region: us-east-1
 
-      # Obtén URLs de API Gateway para DEV y PROD
       - name: Get DEV/PROD API URLs
         id: apis
         run: |
-          # Para HTTP API, serverless info suele mostrar "HttpApi Url: https://xxxxx.execute-api.us-east-1.amazonaws.com"
+          set -e
           DEV_URL=$(npx serverless info --stage dev --verbose | awk '/HttpApi Url/ {print $4; exit}')
           PROD_URL=$(npx serverless info --stage prod --verbose | awk '/HttpApi Url/ {print $4; exit}')
-
-          # Fallback para REST API si fuera el caso (busca "endpoints:")
           if [ -z "$DEV_URL" ]; then
             DEV_URL=$(npx serverless info --stage dev --verbose | awk '/endpoints:/{f=1;next} f&&/https:/{print $1; exit}')
           fi
           if [ -z "$PROD_URL" ]; then
             PROD_URL=$(npx serverless info --stage prod --verbose | awk '/endpoints:/{f=1;next} f&&/https:/{print $1; exit}')
           fi
-
+          echo "DEV_URL=$DEV_URL"
+          echo "PROD_URL=$PROD_URL"
           echo "DEV_URL=$DEV_URL"   >> $GITHUB_OUTPUT
           echo "PROD_URL=$PROD_URL" >> $GITHUB_OUTPUT
 
       - name: Build OpenAPI with real URLs
         run: |
           mkdir -p docs
-          sed "s|__DEV_URL__|${{ steps.apis.outputs.DEV_URL }}|g; s|__PROD_URL__|${{ steps.apis.outputs.PROD_URL }}|g" \
-            openapi.yaml > docs/openapi.yaml
+          sed -e "s|__DEV_URL__|${{ steps.apis.outputs.DEV_URL }}|g" \
+              -e "s|__PROD_URL__|${{ steps.apis.outputs.PROD_URL }}|g" \
+              docs/openapi.template.yaml > docs/openapi.yaml
 
-      # Asegura que index.html exista (si ya lo pusiste en repo, puedes omitir este step)
       - name: Ensure Swagger index
         run: |
           if [ ! -f docs/index.html ]; then
@@ -81,9 +74,7 @@ jobs:
           fi
 
       - uses: actions/configure-pages@v5
-
       - uses: actions/upload-pages-artifact@v3
         with:
           path: docs
-
       - uses: actions/deploy-pages@v4
