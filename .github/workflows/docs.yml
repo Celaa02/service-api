@@ -37,8 +37,8 @@ jobs:
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::<TU_ACCOUNT_ID>:role/<ROLE_CON_PERMISOS_SLS_INFO>
-          aws-region: us-east-1
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME_PROD }}
+          aws-region: ${{ env.AWS_REGION }}
 
       # Obtén URLs de API Gateway para DEV y PROD
       - name: Get DEV/PROD API URLs
