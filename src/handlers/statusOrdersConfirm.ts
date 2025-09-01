@@ -11,12 +11,34 @@ import { pathSchema } from './schemas/Orders/statusConfirmOrdersSchemaHttp';
 import { statusConfirmOrdersDependencies } from '../case/statusConfirmOders/statusConfirmOrdersDepencies';
 import { ProductRepositoryDynamoDB } from '../infrastructure/repository/productsRepository';
 
+/**
+ * Factoría para inyectar dependencias necesarias en el caso de uso `statusConfirmOrders`.
+ *
+ * @returns {statusConfirmOrdersDependencies} - Repositorios de órdenes, productos y logger configurados.
+ */
 const factory = (): statusConfirmOrdersDependencies => ({
   repositoryOrders: new OrderRepositoryDynamoDB(),
   repositoryProduct: new ProductRepositoryDynamoDB(),
   logger,
 });
 
+/**
+ * Lambda handler para el endpoint **PATCH /orders/{id}/confirm**.
+ *
+ * Flujo principal:
+ * 1. Registra la petición entrante en logs.
+ * 2. Valida los parámetros de la ruta (`pathSchema`).
+ * 3. Adapta el caso de uso `statusConfirmOrders` al formato HTTP.
+ * 4. Ejecuta la lógica de negocio para confirmar una orden.
+ *    - Si la orden está en estado `CREATED`, se actualiza a `CONFIRMED`.
+ *    - También decrementa stock de productos asociados.
+ * 5. Si la orden no está en estado válido, retorna HTTP 404 con un mensaje descriptivo.
+ * 6. Si la confirmación es exitosa, retorna HTTP 200 con los datos de la orden confirmada.
+ * 7. Maneja errores y los transforma en respuestas HTTP consistentes.
+ *
+ * @param {APIGatewayProxyEvent} event - Evento recibido desde API Gateway con pathParams (orderId).
+ * @returns {Promise<APIGatewayProxyResult>} - Respuesta HTTP (200 con orden confirmada, 404 si no está en CREATED, error en caso contrario).
+ */
 export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   const dependencies = factory();
   dependencies.logger.info('📥 Incoming request', { event });

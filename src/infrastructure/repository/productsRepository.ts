@@ -17,7 +17,18 @@ import { ddbDoc } from '../database/DynamonDB';
 
 const PRODUCTS_TABLE = process.env.PRODUCTS_TABLE_NAME!;
 
+/**
+ * Implementación de ProductsRepository usando DynamoDB (AWS SDK v3).
+ *
+ * Requiere:
+ * - PRODUCTS_TABLE_NAME: nombre de la tabla de productos (env).
+ */
 export class ProductRepositoryDynamoDB implements ProductsRepository {
+  /**
+   * Crea un producto si no existe `productId` (condición de unicidad).
+   * @param input Datos del producto
+   * @returns El producto creado normalizado
+   */
   async createProduct(input: productCreate): Promise<productResponse> {
     try {
       await ddbDoc.send(
@@ -42,6 +53,11 @@ export class ProductRepositoryDynamoDB implements ProductsRepository {
     }
   }
 
+  /**
+   * Obtiene un producto por ID.
+   * @param productId ID del producto
+   * @returns `productResponse` o `null` si no existe
+   */
   async getProductById(productId: string): Promise<productResponse | null> {
     try {
       const res = await ddbDoc.send(
@@ -68,6 +84,11 @@ export class ProductRepositoryDynamoDB implements ProductsRepository {
     }
   }
 
+  /**
+   * Lista todos los productos.
+   * (Considera paginación si esperas tablas grandes)
+   * @returns Arreglo de productos normalizados
+   */
   async listAll(): Promise<productResponse[]> {
     try {
       const res = await ddbDoc.send(
@@ -81,6 +102,12 @@ export class ProductRepositoryDynamoDB implements ProductsRepository {
     }
   }
 
+  /**
+   * Actualiza campos parciales de un producto por ID.
+   * Construye dinámicamente la UpdateExpression en base a `input`.
+   * @param input `{ productId, ...patch }`
+   * @returns Atributos actualizados del producto
+   */
   async updateProduct(input: UpdateProductInput): Promise<productCreate> {
     const { productId, ...patch } = input;
     if (!productId) throw new Error('productId requerido');
@@ -117,6 +144,11 @@ export class ProductRepositoryDynamoDB implements ProductsRepository {
     }
   }
 
+  /**
+   * Elimina un producto por ID (con condición de existencia).
+   * @param productId ID a eliminar
+   * @returns Objeto con el ID eliminado
+   */
   async deleteProduct(productId: string): Promise<{ deleted: string }> {
     try {
       await ddbDoc.send(
@@ -132,6 +164,11 @@ export class ProductRepositoryDynamoDB implements ProductsRepository {
     }
   }
 
+  /**
+   * Decrementa stock de un producto (chequea existencia y stock suficiente).
+   * @param productId ID del producto
+   * @param qty Cantidad a descontar
+   */
   async decrementStock(productId: string, qty: number): Promise<void> {
     try {
       await ddbDoc.send(
@@ -148,6 +185,11 @@ export class ProductRepositoryDynamoDB implements ProductsRepository {
     }
   }
 
+  /**
+   * Decrementa stock para cada ítem de una orden.
+   * (Ejecución secuencial; considera lote/paralelo si aplica)
+   * @param items Lista de { productId, qty }
+   */
   async decrementStockForOrderItems(items: { productId: string; qty: number }[]): Promise<void> {
     for (const { productId, qty } of items) {
       await this.decrementStock(productId, qty);

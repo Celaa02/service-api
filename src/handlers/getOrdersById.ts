@@ -10,11 +10,31 @@ import { pathSchema } from './schemas/Orders/getByIdOrdersSchemaHttp';
 import { getByIdOrdersDependencies } from '../case/useCaseGetByIdOrders/getByIdOrdersDepencies';
 import { useCaseGetByIdOrders } from '../case/useCaseGetByIdOrders/useCaseGetByIdOrders';
 
+/**
+ * Factoría para inyectar dependencias necesarias en el caso de uso `getByIdOrders`.
+ *
+ * @returns {getByIdOrdersDependencies} - Repositorio de órdenes y logger configurados.
+ */
 const factory = (): getByIdOrdersDependencies => ({
   repository: new OrderRepositoryDynamoDB(),
   logger,
 });
 
+/**
+ * Lambda handler para el endpoint **GET /orders/{id}**.
+ *
+ * Flujo principal:
+ * 1. Registra la petición entrante en logs.
+ * 2. Valida los parámetros de la ruta (`pathSchema`).
+ * 3. Adapta el caso de uso `useCaseGetByIdOrders` al formato HTTP.
+ * 4. Ejecuta la lógica de negocio para obtener una orden por su ID.
+ * 5. Si no se encuentra la orden, retorna HTTP 404 con un mensaje descriptivo.
+ * 6. Si existe, retorna HTTP 200 con la orden encontrada.
+ * 7. Maneja errores y los transforma en respuestas HTTP consistentes.
+ *
+ * @param {APIGatewayProxyEvent} event - Evento recibido desde API Gateway con el request.
+ * @returns {Promise<APIGatewayProxyResult>} - Respuesta HTTP (200 si la orden existe, 404 si no, error en caso contrario).
+ */
 export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   const dependencies = factory();
   dependencies.logger.info('📥 Incoming request', { event });
