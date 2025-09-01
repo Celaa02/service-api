@@ -12,7 +12,21 @@ import { OrdersRepository } from '../../domain/repository/ordersRepository';
 import { mapDynamoError } from '../../utils/mapDynamonError';
 import { ddbDoc } from '../database/DynamonDB';
 
+/**
+ * Implementación de OrdersRepository usando DynamoDB (AWS SDK v3).
+ *
+ * Requiere las siguientes variables de entorno:
+ * - ORDERS_TABLE_NAME: nombre de la tabla de órdenes.
+ *
+ * Índices:
+ * - UserOrdersIndex: GSI para consultar órdenes por userId (usado en listOrdersByUser).
+ */
 export class OrderRepositoryDynamoDB implements OrdersRepository {
+  /**
+   * Crea una orden si no existe `orderId` (condición de unicidad).
+   * @param order Orden ya construida (con orderId, createdAt, etc.)
+   * @returns La orden insertada
+   */
   async createOrders(order: itemCreateOrder): Promise<any> {
     try {
       await ddbDoc.send(
@@ -30,6 +44,11 @@ export class OrderRepositoryDynamoDB implements OrdersRepository {
     }
   }
 
+  /**
+   * Obtiene una orden por ID solo si está en estado CONFIRMED.
+   * @param orderId ID de la orden
+   * @returns Detalle de la orden o null si no existe / no está confirmada
+   */
   async getOrderById(orderId: string): Promise<ordersByIdResponse | null> {
     try {
       const res = await ddbDoc.send(
@@ -59,6 +78,12 @@ export class OrderRepositoryDynamoDB implements OrdersRepository {
     }
   }
 
+  /**
+   * Lista órdenes por usuario con paginación (GSI UserOrdersIndex).
+   * El cursor va en Base64 del LastEvaluatedKey.
+   * @param data userId, limit y cursor opcional
+   * @returns items resumidos + nextCursor (si hay más)
+   */
   async listOrdersByUser(data: orderByUser): Promise<orderListResponse> {
     try {
       const params: any = {
@@ -94,6 +119,12 @@ export class OrderRepositoryDynamoDB implements OrdersRepository {
     }
   }
 
+  /**
+   * Confirma una orden en estado CREATED y guarda el paymentId.
+   * Usa Update con ConditionExpression para garantizar consistencia.
+   * @param data { orderId, paymentId }
+   * @returns Orden confirmada o null si la condición falla
+   */
   async confirmOrder(data: confirmOrder): Promise<ordersByIdResponse | null> {
     try {
       const orderId = data.orderId;
