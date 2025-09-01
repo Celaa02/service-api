@@ -112,7 +112,7 @@ npx serverless deploy --stage prod --region $AWS_REGION
 
 ## 📑 Available Documentation
 
-- [Swagger UI - docs](https://celaa02.github.io/service-api/#/) - (public/openapi.yaml) Documentation / Orders & Products API
+- [GitHub Pages - docs](https://celaa02.github.io/service-api/#/) - (public/openapi.yaml) Documentation / Orders & Products API
 
 ---
 
@@ -120,11 +120,11 @@ npx serverless deploy --stage prod --region $AWS_REGION
 
 **Production base URL**:
 
-- [Orders & Products APIp](https://50tebmulz5.execute-api.us-east-1.amazonaws.com/prod/orders/) - Service URL
+- [Orders & Products APIp](https://50tebmulz5.execute-api.us-east-1.amazonaws.com/prod/) - Service URL
 
 **Development base URL**:
 
-- [Orders & Products API](https://vl3dwdespl.execute-api.us-east-1.amazonaws.com/dev/orders/) - Service URL
+- [Orders & Products API](https://vl3dwdespl.execute-api.us-east-1.amazonaws.com/dev/) - Service URL
 
 ---
 
