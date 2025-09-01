@@ -5,50 +5,105 @@ import { confirmOrder } from '../../src/domain/models/OrdersModels';
 describe('statusConfirmOders use case', () => {
   let dependencies: statusConfirmOrdersDependencies;
 
-  const input: confirmOrder = {
-    orderId: '123e4567-e89b-12d3-a456-426614174000',
-    userId: 'user-1',
-  } as any;
-
   beforeEach(() => {
-    const repository = {
-      confirmOrder: jest.fn(),
-    };
-    const logger = {
-      info: jest.fn(),
-    };
-
     dependencies = {
-      repository: repository as any,
-      logger: logger as any,
-    } as statusConfirmOrdersDependencies;
+      repositoryOrders: {
+        confirmOrder: jest.fn(),
+      },
+      repositoryProduct: {
+        decrementStockForOrderItems: jest.fn(),
+      },
+      logger: {
+        info: jest.fn(),
+      },
+    } as unknown as statusConfirmOrdersDependencies;
 
     jest.clearAllMocks();
   });
 
-  it('debe invocar repository.confirmOrder con el input, loguear y devolver la respuesta', async () => {
-    const repoResponse = { orderId: input.orderId, status: 'CONFIRMED' };
-    (dependencies.repository.confirmOrder as jest.Mock).mockResolvedValue(repoResponse);
+  it('debe confirmar la orden y decrementar stock cuando hay items', async () => {
+    const input: confirmOrder = { orderId: 'o-1', paymentId: 'pay-1' } as any;
 
-    const uc = statusConfirmOders();
-    const result = await uc(dependencies, input);
+    const confirmed = {
+      orderId: 'o-1',
+      userId: 'u-1',
+      items: [
+        { sku: 'A1', qty: 2 },
+        { sku: 'B2', qty: 1 },
+      ],
+      status: 'CONFIRMED',
+      total: 100,
+      paymentId: 'pay-1',
+      createdAt: '2025-01-01T00:00:00.000Z',
+    };
 
-    expect(dependencies.repository.confirmOrder).toHaveBeenCalledTimes(1);
-    expect(dependencies.repository.confirmOrder).toHaveBeenCalledWith(input);
+    (dependencies.repositoryOrders.confirmOrder as jest.Mock).mockResolvedValue(confirmed);
 
-    expect(dependencies.logger.info).toHaveBeenCalledWith('✅ order', repoResponse);
-    expect(result).toBe(repoResponse);
+    const usecase = statusConfirmOders();
+    const result = await usecase(dependencies, input);
+
+    expect(dependencies.repositoryOrders.confirmOrder).toHaveBeenCalledTimes(1);
+    expect(dependencies.repositoryOrders.confirmOrder).toHaveBeenCalledWith(input);
+
+    expect(dependencies.repositoryProduct.decrementStockForOrderItems).toHaveBeenCalledTimes(1);
+    expect(dependencies.repositoryProduct.decrementStockForOrderItems).toHaveBeenCalledWith(
+      confirmed.items,
+    );
+
+    expect(dependencies.logger.info).toHaveBeenCalledWith('✅ order', confirmed);
+    expect(result).toBe(confirmed);
   });
 
-  it('propaga el error si repository.confirmOrder rechaza y no loguea éxito', async () => {
+  it('no debe decrementar stock cuando la respuesta es null', async () => {
+    const input: confirmOrder = { orderId: 'o-404', paymentId: 'pay-x' } as any;
+
+    (dependencies.repositoryOrders.confirmOrder as jest.Mock).mockResolvedValue(null);
+
+    const usecase = statusConfirmOders();
+    const result = await usecase(dependencies, input);
+
+    expect(dependencies.repositoryOrders.confirmOrder).toHaveBeenCalledWith(input);
+    expect(dependencies.repositoryProduct.decrementStockForOrderItems).not.toHaveBeenCalled();
+    expect(dependencies.logger.info).toHaveBeenCalledWith('✅ order', null);
+    expect(result).toBeNull();
+  });
+
+  it('no debe decrementar stock cuando la respuesta no trae items', async () => {
+    const input: confirmOrder = { orderId: 'o-2', paymentId: 'pay-2' } as any;
+
+    const confirmedSinItems = {
+      orderId: 'o-2',
+      userId: 'u-2',
+      status: 'CONFIRMED',
+      total: 55,
+      paymentId: 'pay-2',
+      createdAt: '2025-01-02T00:00:00.000Z',
+      // sin items
+    };
+
+    (dependencies.repositoryOrders.confirmOrder as jest.Mock).mockResolvedValue(confirmedSinItems);
+
+    const usecase = statusConfirmOders();
+    const result = await usecase(dependencies, input);
+
+    expect(dependencies.repositoryOrders.confirmOrder).toHaveBeenCalledWith(input);
+    expect(dependencies.repositoryProduct.decrementStockForOrderItems).not.toHaveBeenCalled();
+    expect(dependencies.logger.info).toHaveBeenCalledWith('✅ order', confirmedSinItems);
+    expect(result).toBe(confirmedSinItems);
+  });
+
+  it('propaga el error si confirmOrder rechaza y no llama a decrement ni logger', async () => {
+    const input: confirmOrder = { orderId: 'o-err', paymentId: 'pay-err' } as any;
     const err = new Error('db fail');
-    (dependencies.repository.confirmOrder as jest.Mock).mockRejectedValue(err);
 
-    const uc = statusConfirmOders();
+    (dependencies.repositoryOrders.confirmOrder as jest.Mock).mockRejectedValue(err);
 
-    await expect(uc(dependencies, input)).rejects.toThrow(err);
+    const usecase = statusConfirmOders();
 
-    expect(dependencies.repository.confirmOrder).toHaveBeenCalledWith(input);
+    await expect(usecase(dependencies, input)).rejects.toThrow(err);
+
+    expect(dependencies.repositoryOrders.confirmOrder).toHaveBeenCalledWith(input);
+    expect(dependencies.repositoryProduct.decrementStockForOrderItems).not.toHaveBeenCalled();
     expect(dependencies.logger.info).not.toHaveBeenCalled();
   });
 });

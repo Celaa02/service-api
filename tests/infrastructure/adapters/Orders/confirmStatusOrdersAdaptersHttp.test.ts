@@ -33,7 +33,8 @@ describe('confirmStatusOrdersHttpAdapter', () => {
 
   beforeEach(() => {
     dependencies = {
-      repository: {} as any,
+      repositoryOrders: {} as any,
+      repositoryProduct: {} as any,
       logger: { info: jest.fn() } as any,
     };
     jest.clearAllMocks();
