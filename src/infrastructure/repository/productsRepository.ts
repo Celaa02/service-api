@@ -131,4 +131,26 @@ export class ProductRepositoryDynamoDB implements ProductsRepository {
       throw mapDynamoError(err);
     }
   }
+
+  async decrementStock(productId: string, qty: number): Promise<void> {
+    try {
+      await ddbDoc.send(
+        new UpdateCommand({
+          TableName: PRODUCTS_TABLE,
+          Key: { productId },
+          UpdateExpression: 'SET stock = stock - :q',
+          ConditionExpression: 'attribute_exists(productId) AND stock >= :q',
+          ExpressionAttributeValues: { ':q': qty },
+        }),
+      );
+    } catch (err: any) {
+      throw mapDynamoError(err);
+    }
+  }
+
+  async decrementStockForOrderItems(items: { productId: string; qty: number }[]): Promise<void> {
+    for (const { productId, qty } of items) {
+      await this.decrementStock(productId, qty);
+    }
+  }
 }

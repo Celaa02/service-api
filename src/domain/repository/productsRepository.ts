@@ -6,4 +6,5 @@ export interface ProductsRepository {
   listAll(): Promise<productResponse[]>;
   updateProduct(input: UpdateProductInput): Promise<productCreate>;
   deleteProduct(productId: string): Promise<{ deleted: string }>;
+  decrementStockForOrderItems(items: { productId: string; qty: number }[]): Promise<void>;
 }

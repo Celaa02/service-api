@@ -9,9 +9,11 @@ import { logger } from '../utils/Logger';
 import { validationHttps } from '../utils/ValidationsHttps';
 import { pathSchema } from './schemas/Orders/statusConfirmOrdersSchemaHttp';
 import { statusConfirmOrdersDependencies } from '../case/statusConfirmOders/statusConfirmOrdersDepencies';
+import { ProductRepositoryDynamoDB } from '../infrastructure/repository/productsRepository';
 
 const factory = (): statusConfirmOrdersDependencies => ({
-  repository: new OrderRepositoryDynamoDB(),
+  repositoryOrders: new OrderRepositoryDynamoDB(),
+  repositoryProduct: new ProductRepositoryDynamoDB(),
   logger,
 });
 
